@@ -15,7 +15,7 @@ const port: string | number = process.env.PORT || 3000;
 const isProd: boolean = process.env.NODE_ENV === 'production';
 
 if (isProd) {
-  const buildPath: string = path.resolve(__dirname, 'src/app/dist');
+  const buildPath: string = path.resolve(__dirname, 'app/dist');
   if (existsSync(buildPath)) {
     app.use(express.static(buildPath));
     app.get('*', (req: Request, res: Response) => {

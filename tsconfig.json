@@ -22,6 +22,12 @@
     "strictPropertyInitialization": false,
     "noEmit": true
   },
-  "exclude": ["node_modules/", "dist/", "tests/"],
-  "include": ["./src"]
+  "exclude": ["node_modules/", "dist/", "tests/", "app/"],
+  "include": [
+    "./server",
+    "app",
+    "postcss.config.js",
+    "tailwind.config.js",
+    "app/vite.config.ts"
+  ]
 }
