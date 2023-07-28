@@ -7,23 +7,12 @@ import cliProgress from "cli-progress";
 import fs from 'fs';
 import path from 'path';
 import { embedder } from "./embeddings.ts";
-import { getEnv } from "./utils/util.ts";
+import { getEnv, listFiles } from "./utils/util.ts";
 import { getPineconeClient } from "./utils/pinecone.ts";
 
 const { waitUntilIndexIsReady } = utils;
 
-async function listFiles(dir: string): Promise<string[]> {
-  const files = await fs.promises.readdir(dir);
-  const filePaths: string[] = [];
-  for (const file of files) {
-    const filePath = path.join(dir, file);
-    const stats = await fs.promises.stat(filePath);
-    if (stats.isFile()) {
-      filePaths.push(filePath);
-    }
-  }
-  return filePaths;
-}
+
 
 
 dotenv.config();
