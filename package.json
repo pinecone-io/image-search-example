@@ -9,7 +9,8 @@
   ],
   "scripts": {
     "dev:server": "nodemon --watch 'src/**/*.ts' --exec 'node --loader ts-node/esm --require tsconfig-paths/register' server/index.ts",
-    "dev": "npm run dev:server && npm run dev:app",
+    "dev:app": "vite --config app/vite.config.ts",
+    "dev": "npm run dev:app & npm run dev:server",
     "tsup": "tsup",
     "build": "tsup",
     "index": "tsx -r dotenv/config src/index.ts",
@@ -18,7 +19,6 @@
     "lint:fix": "npm run lint --fix",
     "format": "prettier --write \"**/*.ts\"",
     "format:check": "prettier --list-different \"**/*.ts\"",
-    "dev:app": "vite --config app/vite.config.ts",
     "build:app": "tsc app && vite build app",
     "lint:app": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
