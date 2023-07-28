@@ -1,78 +1,31 @@
-/* eslint-disable import/no-extraneous-dependencies */
-/* eslint-disable dot-notation */
-import * as dotenv from "dotenv";
-import { PineconeClient, Vector, utils } from '@pinecone-database/pinecone';
-import cliProgress from "cli-progress";
-
-import fs from 'fs';
+import express, { Request, Response } from 'express';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 import path from 'path';
-import { embedder } from "./embeddings.ts";
-import { getEnv } from "./utils/util.ts";
-import { getPineconeClient } from "./utils/pinecone.ts";
-
-const { waitUntilIndexIsReady } = utils;
-
-async function listFiles(dir: string): Promise<string[]> {
-  const files = await fs.promises.readdir(dir);
-  const filePaths: string[] = [];
-  for (const file of files) {
-    const filePath = path.join(dir, file);
-    const stats = await fs.promises.stat(filePath);
-    if (stats.isFile()) {
-      filePaths.push(filePath);
-    }
-  }
-  return filePaths;
-}
+import { existsSync } from 'fs';
 
 
-dotenv.config();
-const { createIndexIfNotExists, chunkedUpsert } = utils;
+const app: express.Application = express();
+const port: string | number = process.env.PORT || 3000;
+const isProd: boolean = process.env.NODE_ENV === 'production';
 
-const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
-
-// Index setup
-const indexName = getEnv("PINECONE_INDEX");
-const pineconeClient = await getPineconeClient();
-
-
-function* chunkArray<T>(array: T[], chunkSize: number): Generator<T[]> {
-  for (let i = 0; i < array.length; i += chunkSize) {
-    yield array.slice(i, i + chunkSize);
-  }
-}
-
-
-async function embedAndUpsert({ imagePaths, chunkSize, progressBar }: { imagePaths: string[], chunkSize: number, progressBar: cliProgress.SingleBar }) {
-  const chunkGenerator = chunkArray(imagePaths, chunkSize);
-  const index = pineconeClient.Index(indexName);
-
-  for await (const imagePaths of chunkGenerator) {
-    await embedder.embedBatch(imagePaths, chunkSize, async (embeddings: Vector[]) => {
-      await chunkedUpsert(index, embeddings, "default");
-      progressBar.increment(embeddings.length);
+if (isProd) {
+  const buildPath: string = path.resolve(__dirname, 'src/app/dist');
+  if (existsSync(buildPath)) {
+    app.use(express.static(buildPath));
+    app.get('*', (req: Request, res: Response) => {
+      res.sendFile(path.resolve(buildPath, 'index.html'));
     });
+  } else {
+    console.log('Production build not found. Run `yarn build` in `src/app` directory.');
   }
+} else {
+  app.use("/", createProxyMiddleware({
+    target: 'http://localhost:5173/',
+    changeOrigin: true,
+    ws: true,
+  }));
 }
 
-const index = async () => {
-  try {
-    await createIndexIfNotExists(pineconeClient, indexName, 512);
-    await waitUntilIndexIsReady(pineconeClient, indexName);
-
-    await embedder.init("Xenova/clip-vit-base-patch32");
-
-    const imagePaths = await listFiles("./data");
-
-
-    await embedAndUpsert({ imagePaths, chunkSize: 100, progressBar });
-
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-export {
-  index
-};
-
+app.listen(port, () => {
+  console.log(`Server started at http://localhost:${port}`);
+});
