@@ -49,7 +49,6 @@ const resolvers: Resolver[] = [
       }
     }
   }
-  // More resolvers can be added here
 ];
 
 export {

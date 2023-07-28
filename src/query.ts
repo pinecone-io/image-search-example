@@ -13,9 +13,6 @@ const pineconeIndex = pineconeClient.Index(indexName);
 
 await embedder.init("Xenova/clip-vit-base-patch32");
 
-// We create a simulated a user with an interest given a query and a specific section
-
-
 const queryImages = async (imagePath: string) => {
   const queryEmbedding = await embedder.embed(imagePath);
   const queryResult = await pineconeIndex.query({

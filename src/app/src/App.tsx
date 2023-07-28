@@ -43,8 +43,11 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-800 text-white w-full">
+      <div className="flex justify-center p-5">
+        <h1 className="text-4xl">Image Search</h1>
+      </div>
       <div className="p-5">
-        <button className="mr-4 py-2 px-4 bg-blue-500 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md focus:outline-none">
+        <button className="mr-4 py-2 px-4 bg-green-500 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md focus:outline-none">
           Index
         </button>
       </div>
