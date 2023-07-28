@@ -1,7 +1,5 @@
 import fs from 'fs/promises';
 import path from 'path';
-import yargs from "yargs";
-import { hideBin } from "yargs/helpers";
 
 const sliceIntoChunks = <T>(arr: T[], chunkSize: number) => Array.from({ length: Math.ceil(arr.length / chunkSize) }, (_, i) =>
   arr.slice(i * chunkSize, (i + 1) * chunkSize)

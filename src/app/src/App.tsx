@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 import "./App.css";
 interface Image {
@@ -82,14 +82,16 @@ function App() {
         {searchResults.map((result, index) => (
           <div
             key={index}
-            className="w-full h-64 bg-gray-600 rounded-md flex flex-col items-center justify-center my-2"
+            className="w-full h-64 bg-gray-600 rounded-md flex flex-col items-center justify-center my-2 overflow-hidden"
           >
             <img
               src={result.src}
               alt="Search result"
-              className="w-full h-full object-cover"
+              className="w-full h-4/5 object-cover"
             />
-            <p>Score: {result.score}</p>
+            <p className="w-full text-center bg-blue-500 text-white">
+              Score: {result.score}
+            </p>
           </div>
         ))}
       </div>
