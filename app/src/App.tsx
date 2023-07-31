@@ -17,6 +17,8 @@ function App() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const [page, setPage] = useState(1);
+  const [indexing, setIndexing] = useState(false);
+  const [indexSuccess, setIndexSuccess] = useState(false);
   const pageSize = 3;
 
   useEffect(() => {
@@ -31,6 +33,15 @@ function App() {
 
     fetchImages();
   }, [page, pageSize]);
+
+  const handleIndexClick = async () => {
+    setIndexing(true);
+    const response = await fetch("/indexImages");
+    setIndexing(false);
+    if (response.status === 200) {
+      setIndexSuccess(true);
+    }
+  };
 
   const handleImageClick = async (imagePath: string) => {
     setSelectedImage(imagePath);
@@ -47,9 +58,19 @@ function App() {
         <h1 className="text-4xl">Image Search</h1>
       </div>
       <div className="p-5">
-        <button className="mr-4 py-2 px-4 bg-green-500 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md focus:outline-none">
+        <button
+          onClick={handleIndexClick}
+          className={`${
+            indexSuccess ? "bg-green-500" : "bg-blue-400"
+          } mr-4 py-2 px-4 bg-green-500 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md focus:outline-none`}
+        >
           Index
         </button>
+        {indexing && (
+          <div className="flex justify-center items-center h-screen">
+            <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-purple-500"></div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-4 p-5">
