@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 
 
 import { existsSync } from 'fs';
-import { resolvers } from './resolvers.ts';
+import { resolvers } from './routes.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

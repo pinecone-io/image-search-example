@@ -24,9 +24,13 @@ function* chunkArray<T>(array: T[], chunkSize: number): Generator<T[]> {
 
 
 async function embedAndUpsert({ imagePaths, chunkSize }: { imagePaths: string[], chunkSize: number }) {
+  // Chunk the image paths into batches of size chunkSize
   const chunkGenerator = chunkArray(imagePaths, chunkSize);
+
+  // Get the index
   const index = pineconeClient.Index(indexName);
 
+  // Embed each batch and upsert the embeddings into the index
   for await (const imagePaths of chunkGenerator) {
     await embedder.embedBatch(imagePaths, chunkSize, async (embeddings: Vector[]) => {
       await chunkedUpsert(index, embeddings, "default");
@@ -38,16 +42,14 @@ const indexImages = async () => {
   try {
     await createIndexIfNotExists(pineconeClient, indexName, 512);
     await waitUntilIndexIsReady(pineconeClient, indexName);
-
     await embedder.init("Xenova/clip-vit-base-patch32");
-
     const imagePaths = await listFiles("./data");
-
-
     await embedAndUpsert({ imagePaths, chunkSize: 100 });
+    return;
 
   } catch (error) {
     console.error(error);
+    throw error;
   }
 };
 

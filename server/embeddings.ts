@@ -1,36 +1,46 @@
-import { Pipeline, pipeline, AutoConfig, AutoTokenizer, AutoProcessor, AutoModel, RawImage, Processor, PreTrainedModel, PreTrainedTokenizer } from "@xenova/transformers";
+import { AutoTokenizer, AutoProcessor, AutoModel, RawImage, Processor, PreTrainedModel, PreTrainedTokenizer } from "@xenova/transformers";
 import { Vector } from "@pinecone-database/pinecone";
-import { sliceIntoChunks } from "./utils/util.js";
 import { createHash } from 'crypto';
+
+import { sliceIntoChunks } from "./utils/util.js";
 
 
 class Embedder {
 
   private processor: Processor;
+
   private model: PreTrainedModel;
+
   private tokenizer: PreTrainedTokenizer;
 
   async init(modelName: string) {
+    // Load the model, tokenizer and processor
     this.model = await AutoModel.from_pretrained(modelName);
-
     this.tokenizer = await AutoTokenizer.from_pretrained(modelName);
     this.processor = await AutoProcessor.from_pretrained(modelName);
 
   }
 
-  // Embeds a text and returns the embedding
+  // Embeds an image and returns the embedding
   async embed(imagePath: string, metadata?: Record<string, unknown>): Promise<Vector> {
     try {
+      // Load the image
       const image = await RawImage.read(imagePath);
+      // Prepare the image and text inputs
       const image_inputs = await this.processor(image);
       const text_inputs = this.tokenizer([''], {
         padding: true,
         truncation: true
       });
+      // Embed the image
       const output = await this.model({ ...text_inputs, ...image_inputs });
       const { image_embeds } = output;
-      const { data: embeddings } = image_embeds
+      const { data: embeddings } = image_embeds;
+
+      // Create an id for the image
       const id = createHash('md5').update(imagePath).digest('hex');
+
+      // Return the embedding in a format ready for Pinecone
       return {
         id,
         metadata: metadata || {
