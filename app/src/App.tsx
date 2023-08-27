@@ -82,7 +82,7 @@ function App() {
             }`}
             onClick={() => handleImageClick(image.src)}
           >
-            <img src={image.src} alt={image.alt} />
+            <img src={"/" + image.src} alt={image.alt} />
           </div>
         ))}
       </div>
