@@ -58,11 +58,18 @@
     "postcss": "^8.4.27",
     "prettier": "^2.8.3",
     "tailwindcss": "^3.3.3",
+    "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.2.0",
     "tsx": "^3.12.3",
     "typescript": "^5.0.2",
     "vite": "^4.4.7",
     "vite-plugin-windicss": "^1.9.0",
     "windicss": "^3.5.6"
+  },
+  "engines": {
+    "node": "18.17.1",
+    "npm": "Please use pnpm 8.6.12",
+    "pnpm": "8.6.12",
+    "yarn": "Please use pnpm 8.6.12"
   }
 }
