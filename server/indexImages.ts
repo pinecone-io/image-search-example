@@ -1,19 +1,17 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable dot-notation */
 import * as dotenv from "dotenv";
-import { Vector, utils } from '@pinecone-database/pinecone';
+import { Pinecone } from '@pinecone-database/pinecone';
+import type { PineconeRecord } from '@pinecone-database/pinecone';
 import { embedder } from "./embeddings.ts";
 import { getEnv, listFiles } from "./utils/util.ts";
-import { getPineconeClient } from "./utils/pinecone.ts";
+import { chunkedUpsert } from "./utils/chunkedUpsert.ts";
 
 dotenv.config();
 
-const { waitUntilIndexIsReady } = utils;
-const { createIndexIfNotExists, chunkedUpsert } = utils;
-
 // Index setup
 const indexName = getEnv("PINECONE_INDEX");
-const pineconeClient = await getPineconeClient();
+const pinecone = new Pinecone();
 
 
 function* chunkArray<T>(array: T[], chunkSize: number): Generator<T[]> {
@@ -28,11 +26,11 @@ async function embedAndUpsert({ imagePaths, chunkSize }: { imagePaths: string[],
   const chunkGenerator = chunkArray(imagePaths, chunkSize);
 
   // Get the index
-  const index = pineconeClient.Index(indexName);
+  const index = pinecone.index(indexName);
 
   // Embed each batch and upsert the embeddings into the index
   for await (const imagePaths of chunkGenerator) {
-    await embedder.embedBatch(imagePaths, chunkSize, async (embeddings: Vector[]) => {
+    await embedder.embedBatch(imagePaths, chunkSize, async (embeddings: PineconeRecord[]) => {
       await chunkedUpsert(index, embeddings, "default");
     });
   }
@@ -40,8 +38,12 @@ async function embedAndUpsert({ imagePaths, chunkSize }: { imagePaths: string[],
 
 const indexImages = async () => {
   try {
-    await createIndexIfNotExists(pineconeClient, indexName, 512);
-    await waitUntilIndexIsReady(pineconeClient, indexName);
+    // Create the index if it doesn't already exist
+    const indexList = await pinecone.listIndexes();
+    if (indexList.indexOf({ name: indexName }) === -1) {
+      await pinecone.createIndex({ name: indexName, dimension: 512, waitUntilReady: true })
+    }
+
     await embedder.init("Xenova/clip-vit-base-patch32");
     const imagePaths = await listFiles("./data");
     await embedAndUpsert({ imagePaths, chunkSize: 100 });

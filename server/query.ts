@@ -1,35 +1,32 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { embedder } from "./embeddings.ts";
 import { getEnv } from "./utils/util.ts";
-import { getPineconeClient } from "./utils/pinecone.ts";
+import { Pinecone } from '@pinecone-database/pinecone';
 
-interface Metadata {
+type Metadata = {
   imagePath: string;
 }
 
 const indexName = getEnv("PINECONE_INDEX");
-const pineconeClient = await getPineconeClient();
-const pineconeIndex = pineconeClient.Index(indexName);
+const pinecone = new Pinecone();
+const index = pinecone.index<Metadata>(indexName);
 
 await embedder.init("Xenova/clip-vit-base-patch32");
 
 const queryImages = async (imagePath: string) => {
   const queryEmbedding = await embedder.embed(imagePath);
-  const queryResult = await pineconeIndex.query({
-    queryRequest: {
+  const queryResult = await index.namespace('default').query({
       vector: queryEmbedding.values,
       includeMetadata: true,
       includeValues: true,
-      namespace: "default",
       topK: 6
-    }
   });
   return queryResult.matches?.map(match => {
-    const metadata = match.metadata as Metadata;
+    const metadata = match.metadata;
     return {
-      src: metadata.imagePath,
+      src: metadata ? metadata.imagePath : '',
       score: match.score
-    };
+    };  
   });
 };
 

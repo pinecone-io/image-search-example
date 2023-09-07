@@ -1,5 +1,8 @@
 import fs from 'fs/promises';
 import path from 'path';
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 const sliceIntoChunks = <T>(arr: T[], chunkSize: number) => Array.from({ length: Math.ceil(arr.length / chunkSize) }, (_, i) =>
   arr.slice(i * chunkSize, (i + 1) * chunkSize)
