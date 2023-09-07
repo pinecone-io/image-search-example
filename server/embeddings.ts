@@ -1,5 +1,5 @@
 import { AutoTokenizer, AutoProcessor, AutoModel, RawImage, Processor, PreTrainedModel, PreTrainedTokenizer } from "@xenova/transformers";
-import { Vector } from "@pinecone-database/pinecone";
+import type { RecordMetadata, PineconeRecord } from "@pinecone-database/pinecone";
 import { createHash } from 'crypto';
 
 import { sliceIntoChunks } from "./utils/util.js";
@@ -22,7 +22,7 @@ class Embedder {
   }
 
   // Embeds an image and returns the embedding
-  async embed(imagePath: string, metadata?: Record<string, unknown>): Promise<Vector> {
+  async embed(imagePath: string, metadata?: RecordMetadata): Promise<PineconeRecord> {
     try {
       // Load the image
       const image = await RawImage.read(imagePath);
@@ -58,7 +58,7 @@ class Embedder {
   async embedBatch(
     imagePaths: string[],
     batchSize: number,
-    onDoneBatch: (embeddings: Vector[]) => void
+    onDoneBatch: (embeddings: PineconeRecord[]) => void
   ) {
     const batches = sliceIntoChunks<string>(imagePaths, batchSize);
     for (const batch of batches) {
