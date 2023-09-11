@@ -3,8 +3,8 @@ import { queryImages } from "./query.ts";
 import { listFiles } from "./utils/util.ts";
 import { indexImages } from "./indexImages.ts";
 import { dirname, join } from "path";
-import { getEnv } from "./utils/util";
 import { fileURLToPath } from "url";
+import { PINECONE_DATA_DIR_PATH } from "./utils/enviroment";
 
 interface Route {
   route: string;
@@ -13,10 +13,7 @@ interface Route {
 }
 
 const imagePaths = await listFiles(
-  join(
-    dirname(fileURLToPath(import.meta.url)),
-    getEnv("PINECONE_DATA_DIR_PATH")
-  )
+  join(dirname(fileURLToPath(import.meta.url)), PINECONE_DATA_DIR_PATH)
 );
 
 function getImagesInRange(

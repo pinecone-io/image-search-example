@@ -21,19 +21,4 @@ async function listFiles(dir: string): Promise<string[]> {
   return filePaths;
 }
 
-export const getEnv = (key: string): string => {
-  const value = process.env[key];
-  if (!value) {
-    throw new Error(`${key} environment variable not set`);
-  }
-  return value;
-};
-
-const validateEnvironmentVariables = () => {
-  getEnv("PINECONE_API_KEY");
-  getEnv("PINECONE_ENVIRONMENT");
-  getEnv("PINECONE_INDEX");
-  getEnv("PINECONE_DATA_DIR_PATH");
-};
-
-export { listFiles, sliceIntoChunks, validateEnvironmentVariables };
+export { listFiles, sliceIntoChunks };

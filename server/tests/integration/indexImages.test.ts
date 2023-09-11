@@ -1,5 +1,6 @@
 import request from "supertest";
 import { viteNodeApp } from "../../index";
+import { PINECONE_INDEX } from "../../utils/enviroment";
 import { getPineconeClient } from "../../utils/pinecone";
 
 describe(
@@ -8,7 +9,6 @@ describe(
     it("should index images and query them", async () => {
       // Index
       const res = await request(viteNodeApp).get("/indexImages");
-
       expect(res.statusCode).toBe(200);
       expect(res.body).toStrictEqual({
         message: "Indexing complete",
@@ -18,7 +18,6 @@ describe(
       const result = await request(viteNodeApp)
         .get("/getImages")
         .query({ page: 1, pageSize: 3 });
-
       expect(result.statusCode).toBe(200);
       expect(result.body).toStrictEqual([
         {
@@ -34,9 +33,8 @@ describe(
 
       // Delete Index
       const pineconeClient = await getPineconeClient();
-
       await pineconeClient.deleteIndex({
-        indexName: `${process.env.PINECONE_INDEX}`,
+        indexName: PINECONE_INDEX,
       });
     });
   },

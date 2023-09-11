@@ -1,15 +1,14 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { embedder } from "./embeddings.ts";
-import { getEnv } from "./utils/util.ts";
+import { PINECONE_INDEX } from "./utils/enviroment";
 import { getPineconeClient } from "./utils/pinecone.ts";
 
 interface Metadata {
   imagePath: string;
 }
 
-const indexName = getEnv("PINECONE_INDEX");
 const pineconeClient = await getPineconeClient();
-const pineconeIndex = pineconeClient.Index(indexName);
+const pineconeIndex = pineconeClient.Index(PINECONE_INDEX);
 
 await embedder.init("Xenova/clip-vit-base-patch32");
 
@@ -21,18 +20,16 @@ const queryImages = async (imagePath: string) => {
       includeMetadata: true,
       includeValues: true,
       namespace: "default",
-      topK: 6
-    }
+      topK: 6,
+    },
   });
-  return queryResult.matches?.map(match => {
+  return queryResult.matches?.map((match) => {
     const metadata = match.metadata as Metadata;
     return {
       src: metadata.imagePath,
-      score: match.score
+      score: match.score,
     };
   });
 };
 
-export {
-  queryImages
-};
+export { queryImages };

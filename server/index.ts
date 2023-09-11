@@ -2,11 +2,9 @@ import express, { Request, Response, Router } from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import path, { dirname, join } from "path";
 import { fileURLToPath } from "url";
-
 import { existsSync } from "fs";
-import { resolvers } from "./routes.ts";
-import { config } from "dotenv";
-import { getEnv } from "./utils/util";
+import { resolvers } from "./routes";
+import { IS_PROD, PINECONE_DATA_DIR_PATH } from "./utils/enviroment";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -22,16 +20,11 @@ resolvers.forEach((resolver) => {
 
 app.use(router);
 
-config();
-
-if (import.meta.env.PROD) {
+if (IS_PROD) {
   const buildPath: string = path.resolve(__dirname, "../app");
   if (existsSync(buildPath)) {
     app.use(express.static(buildPath));
-    app.use(
-      "/data",
-      express.static(join(__dirname, getEnv("PINECONE_DATA_DIR_PATH")))
-    );
+    app.use("/data", express.static(join(__dirname, PINECONE_DATA_DIR_PATH)));
     app.get("*", (req: Request, res: Response) => {
       res.sendFile(path.resolve(buildPath, "index.html"));
     });
@@ -43,10 +36,7 @@ if (import.meta.env.PROD) {
     console.log("Production build not found. Run `pnpm build`");
   }
 } else {
-  app.use(
-    "/data",
-    express.static(join(__dirname, getEnv("PINECONE_DATA_DIR_PATH")))
-  );
+  app.use("/data", express.static(join(__dirname, PINECONE_DATA_DIR_PATH)));
   app.use(
     "/",
     createProxyMiddleware({
