@@ -18,7 +18,7 @@ export default defineConfig({
       targets: [
         {
           src: path.resolve(__dirname, "../data"),
-          dest: "../data",
+          dest: "../",
         },
       ],
     }),

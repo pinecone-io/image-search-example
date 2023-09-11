@@ -29,7 +29,7 @@ if (import.meta.env.PROD) {
   if (existsSync(buildPath)) {
     app.use(express.static(buildPath));
     app.use(
-      "/",
+      "/data",
       express.static(join(__dirname, getEnv("PINECONE_DATA_DIR_PATH")))
     );
     app.get("*", (req: Request, res: Response) => {
