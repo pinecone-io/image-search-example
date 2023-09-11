@@ -18,7 +18,7 @@ export default defineConfig({
       targets: [
         {
           src: path.resolve(__dirname, "../data"),
-          dest: "./data",
+          dest: "../data",
         },
       ],
     }),
@@ -44,5 +44,6 @@ export default defineConfig({
     // In order to escape nightmare in CI/CD pipelines we will retrigger and rerun.
     // Retry the test specific number of times if it fails.
     retry: 5,
+    globalSetup: ["server/tests/globalSetup/enviroment.ts"],
   },
 });

@@ -2,6 +2,9 @@ import express from "express";
 import { queryImages } from "./query.ts";
 import { listFiles } from "./utils/util.ts";
 import { indexImages } from "./indexImages.ts";
+import { dirname, join } from "path";
+import { getEnv } from "./utils/util";
+import { fileURLToPath } from "url";
 
 interface Route {
   route: string;
@@ -9,7 +12,12 @@ interface Route {
   handler: (req: express.Request, res: express.Response) => void;
 }
 
-const imagePaths = await listFiles("./data");
+const imagePaths = await listFiles(
+  join(
+    dirname(fileURLToPath(import.meta.url)),
+    getEnv("PINECONE_DATA_DIR_PATH")
+  )
+);
 
 function getImagesInRange(
   page: number,
