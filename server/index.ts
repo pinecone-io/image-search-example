@@ -42,7 +42,7 @@ if (IS_PROD) {
     createProxyMiddleware({
       target: "http://localhost:5173/",
       changeOrigin: true,
-    })
+    }),
   );
 }
 

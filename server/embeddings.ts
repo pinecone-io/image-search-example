@@ -1,12 +1,18 @@
-import { AutoTokenizer, AutoProcessor, AutoModel, RawImage, Processor, PreTrainedModel, PreTrainedTokenizer } from "@xenova/transformers";
+import {
+  AutoTokenizer,
+  AutoProcessor,
+  AutoModel,
+  RawImage,
+  Processor,
+  PreTrainedModel,
+  PreTrainedTokenizer,
+} from "@xenova/transformers";
 import { Vector } from "@pinecone-database/pinecone";
-import { createHash } from 'crypto';
+import { createHash } from "crypto";
 
 import { sliceIntoChunks } from "./utils/util";
 
-
 class Embedder {
-
   private processor!: Processor;
 
   private model!: PreTrainedModel;
@@ -18,19 +24,21 @@ class Embedder {
     this.model = await AutoModel.from_pretrained(modelName);
     this.tokenizer = await AutoTokenizer.from_pretrained(modelName);
     this.processor = await AutoProcessor.from_pretrained(modelName);
-
   }
 
   // Embeds an image and returns the embedding
-  async embed(imagePath: string, metadata?: Record<string, unknown>): Promise<Vector> {
+  async embed(
+    imagePath: string,
+    metadata?: Record<string, unknown>,
+  ): Promise<Vector> {
     try {
       // Load the image
       const image = await RawImage.read(imagePath);
       // Prepare the image and text inputs
       const image_inputs = await this.processor(image);
-      const text_inputs = this.tokenizer([''], {
+      const text_inputs = this.tokenizer([""], {
         padding: true,
-        truncation: true
+        truncation: true,
       });
       // Embed the image
       const output = await this.model({ ...text_inputs, ...image_inputs });
@@ -38,7 +46,7 @@ class Embedder {
       const { data: embeddings } = image_embeds;
 
       // Create an id for the image
-      const id = createHash('md5').update(imagePath).digest('hex');
+      const id = createHash("md5").update(imagePath).digest("hex");
 
       // Return the embedding in a format ready for Pinecone
       return {
@@ -58,20 +66,17 @@ class Embedder {
   async embedBatch(
     imagePaths: string[],
     batchSize: number,
-    onDoneBatch: (embeddings: Vector[]) => void
+    onDoneBatch: (embeddings: Vector[]) => void,
   ) {
     const batches = sliceIntoChunks<string>(imagePaths, batchSize);
     for (const batch of batches) {
       const embeddings = await Promise.all(
-        batch.map(imagePath => this.embed(imagePath)
-        ));
+        batch.map((imagePath) => this.embed(imagePath)),
+      );
       await onDoneBatch(embeddings);
     }
   }
 }
-
-
-
 
 const embedder = new Embedder();
 export { embedder };

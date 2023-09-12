@@ -38,7 +38,7 @@ async function embedAndUpsert({
       chunkSize,
       async (embeddings: Vector[]) => {
         await chunkedUpsert(index, embeddings, "default");
-      }
+      },
     );
   }
 }
@@ -49,7 +49,7 @@ const indexImages = async () => {
     await waitUntilIndexIsReady(pineconeClient, PINECONE_INDEX);
     await embedder.init("Xenova/clip-vit-base-patch32");
     const imagePaths = await listFiles(
-      join(dirname(fileURLToPath(import.meta.url)), PINECONE_DATA_DIR_PATH)
+      join(dirname(fileURLToPath(import.meta.url)), PINECONE_DATA_DIR_PATH),
     );
     await embedAndUpsert({ imagePaths, chunkSize: 100 });
   } catch (error) {

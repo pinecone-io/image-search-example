@@ -3,7 +3,7 @@ import path from "path";
 
 const sliceIntoChunks = <T>(arr: T[], chunkSize: number) =>
   Array.from({ length: Math.ceil(arr.length / chunkSize) }, (_, i) =>
-    arr.slice(i * chunkSize, (i + 1) * chunkSize)
+    arr.slice(i * chunkSize, (i + 1) * chunkSize),
   );
 
 async function listFiles(dir: string): Promise<string[]> {
@@ -14,7 +14,7 @@ async function listFiles(dir: string): Promise<string[]> {
     const stats = await fs.stat(filePath);
     if (stats.isFile()) {
       filePaths.push(
-        `data/${filePath.substring(filePath.lastIndexOf("/") + 1)}`
+        `data/${filePath.substring(filePath.lastIndexOf("/") + 1)}`,
       );
     }
   }

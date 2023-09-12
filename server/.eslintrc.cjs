@@ -10,7 +10,7 @@ module.exports = {
     parser: "@typescript-eslint/parser",
     sourceType: "module",
   },
-  plugins: ["@typescript-eslint"],
+  plugins: ["prettier", "@typescript-eslint"],
   rules: {
     "@typescript-eslint/explicit-module-boundary-types": 0,
     "@typescript-eslint/no-empty-function": 0,
@@ -37,5 +37,6 @@ module.exports = {
     "no-use-before-define": 0,
     "no-useless-constructor": 0,
     semi: ["error", "always"],
+    "prettier/prettier": "error"
   },
 };

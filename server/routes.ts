@@ -13,13 +13,13 @@ interface Route {
 }
 
 const imagePaths = await listFiles(
-  join(dirname(fileURLToPath(import.meta.url)), PINECONE_DATA_DIR_PATH)
+  join(dirname(fileURLToPath(import.meta.url)), PINECONE_DATA_DIR_PATH),
 );
 
 function getImagesInRange(
   page: number,
   pageSize: number,
-  imagePaths: string[]
+  imagePaths: string[],
 ): string[] {
   const start = (page - 1) * pageSize;
   const end = start + pageSize;
@@ -51,7 +51,7 @@ const routes: Route[] = [
         const images = await getImagesInRange(page, pageSize, imagePaths).map(
           (image) => ({
             src: image,
-          })
+          }),
         );
         res.json(images);
       } catch (error) {
