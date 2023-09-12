@@ -2,16 +2,16 @@ import { AutoTokenizer, AutoProcessor, AutoModel, RawImage, Processor, PreTraine
 import { Vector } from "@pinecone-database/pinecone";
 import { createHash } from 'crypto';
 
-import { sliceIntoChunks } from "./utils/util.js";
+import { sliceIntoChunks } from "./utils/util";
 
 
 class Embedder {
 
-  private processor: Processor;
+  private processor!: Processor;
 
-  private model: PreTrainedModel;
+  private model!: PreTrainedModel;
 
-  private tokenizer: PreTrainedTokenizer;
+  private tokenizer!: PreTrainedTokenizer;
 
   async init(modelName: string) {
     // Load the model, tokenizer and processor

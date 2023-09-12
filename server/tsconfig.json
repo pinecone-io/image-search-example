@@ -3,11 +3,12 @@
     /* Visit https://aka.ms/tsconfig to read more about this file */
 
     /* Language and Environment */
-    "target": "es2016",
+    "target": "ESNext",
 
     /* Modules */
-    "module": "commonjs",
-    "types": ["vitest/globals"],
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "types": ["node", "vitest/globals"],
 
     /* Emit */
     "noEmit": true,

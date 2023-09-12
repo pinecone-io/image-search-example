@@ -1,7 +1,6 @@
-/* eslint-disable import/no-extraneous-dependencies */
-import { embedder } from "./embeddings.ts";
+import { embedder } from "./embeddings";
 import { PINECONE_INDEX } from "./utils/enviroment";
-import { getPineconeClient } from "./utils/pinecone.ts";
+import { getPineconeClient } from "./utils/pinecone";
 
 interface Metadata {
   imagePath: string;

@@ -1,11 +1,9 @@
-/* eslint-disable import/no-extraneous-dependencies */
-/* eslint-disable dot-notation */
 import { Vector, utils } from "@pinecone-database/pinecone";
-import { embedder } from "./embeddings.ts";
-import { listFiles } from "./utils/util.ts";
-import { getPineconeClient } from "./utils/pinecone.ts";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { embedder } from "./embeddings";
+import { listFiles } from "./utils/util";
+import { getPineconeClient } from "./utils/pinecone";
 import { PINECONE_DATA_DIR_PATH, PINECONE_INDEX } from "./utils/enviroment";
 
 const { waitUntilIndexIsReady } = utils;
@@ -54,7 +52,6 @@ const indexImages = async () => {
       join(dirname(fileURLToPath(import.meta.url)), PINECONE_DATA_DIR_PATH)
     );
     await embedAndUpsert({ imagePaths, chunkSize: 100 });
-    return;
   } catch (error) {
     console.error(error);
     throw error;

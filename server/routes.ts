@@ -1,9 +1,9 @@
 import express from "express";
-import { queryImages } from "./query.ts";
-import { listFiles } from "./utils/util.ts";
-import { indexImages } from "./indexImages.ts";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { queryImages } from "./query";
+import { listFiles } from "./utils/util";
+import { indexImages } from "./indexImages";
 import { PINECONE_DATA_DIR_PATH } from "./utils/enviroment";
 
 interface Route {
