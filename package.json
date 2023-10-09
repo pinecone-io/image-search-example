@@ -34,6 +34,10 @@
     "test": "vitest run --config server/vite.config.ts  --coverage --retry 5"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.4.2",
+    "@fortawesome/free-brands-svg-icons": "^6.4.2",
+    "@fortawesome/free-solid-svg-icons": "^6.4.2",
+    "@fortawesome/react-fontawesome": "^0.2.0",
     "@pinecone-database/pinecone": "^0.1.6",
     "@xenova/transformers": "^2.2.0",
     "console-table-printer": "^2.11.1",
