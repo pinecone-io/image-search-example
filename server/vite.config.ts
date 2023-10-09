@@ -29,6 +29,7 @@ export default defineConfig({
     target: "node18.17.1",
   },
   test: {
+    root: "./server",
     globals: true,
     cache: false,
     threads: false,
