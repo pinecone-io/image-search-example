@@ -1,5 +1,4 @@
 import express, { Request, Response, Router } from "express";
-import { createProxyMiddleware } from "http-proxy-middleware";
 import path, { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { existsSync } from "fs";
@@ -18,7 +17,7 @@ resolvers.forEach((resolver) => {
   router[resolver.method](resolver.route, resolver.handler);
 });
 
-app.use(router);
+app.use("/api", router);
 
 if (IS_PROD) {
   const buildPath: string = path.resolve(__dirname, "../app");
@@ -37,13 +36,6 @@ if (IS_PROD) {
   }
 } else {
   app.use("/data", express.static(join(__dirname, PINECONE_DATA_DIR_PATH)));
-  app.use(
-    "/",
-    createProxyMiddleware({
-      target: "http://localhost:5173/",
-      changeOrigin: true,
-    }),
-  );
 }
 
 export const viteNodeApp = app;

@@ -16,6 +16,8 @@ export interface SearchResult {
   score: number;
 }
 
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 const App = () => {
   const [images, setImages] = useState<Image[]>([]);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -29,7 +31,7 @@ const App = () => {
   useEffect(() => {
     const fetchImages = async () => {
       const response = await fetch(
-        `/getImages?page=${page}&pageSize=${pageSize}`
+        `${BASE_URL}/api/getImages?page=${page}&pageSize=${pageSize}`
       );
       const data: Image[] = await response.json();
       console.log(data);
@@ -41,7 +43,7 @@ const App = () => {
 
   const handleIndexClick = async () => {
     setIndexing(true);
-    const response = await fetch("/indexImages");
+    const response = await fetch(`${BASE_URL}/api/indexImages`);
     setIndexing(false);
     if (response.status === 200) {
       setIndexSuccess(true);
@@ -51,7 +53,7 @@ const App = () => {
   const handleImageClick = async (imagePath: string) => {
     setSelectedImage(imagePath);
     const response = await fetch(
-      `/search?imagePath=${encodeURIComponent(imagePath)}`
+      `${BASE_URL}/api/search?imagePath=${encodeURIComponent(imagePath)}`
     );
     const matchingImages: SearchResult[] = await response.json();
     setSearchResults(matchingImages);

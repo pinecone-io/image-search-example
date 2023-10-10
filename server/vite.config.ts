@@ -7,6 +7,7 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 export default defineConfig({
   root: __dirname,
   server: {
+    strictPort: true,
     port: 3000,
   },
   plugins: [
