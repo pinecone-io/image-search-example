@@ -65,13 +65,13 @@ describe("App", () => {
 
   it("should render div if indexing is true", async () => {
     const button = screen.getByText("Index");
-    let indexing = true;
     const { container } = render(<App />);
+    const animateSpin = container.querySelector(".animate-spin");
+    expect(animateSpin).toBeNull();
     fireEvent.click(button);
-    if (indexing) {
-      const animateSpin = container.querySelector(".animate-spin");
+    await waitFor(() => {
       expect(animateSpin).toBeDefined();
-    }
+    });
   });
   it("should render different classes based on true/false", async () => {
     let indexSuccess = false;
