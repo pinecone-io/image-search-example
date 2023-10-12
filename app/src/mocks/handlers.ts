@@ -10,7 +10,7 @@ export const handlers = [
         alt: "data/abra-1",
       },
       {
-        src: "data/Abra-10a9f06ec6524c66b779ea80354f8519_jpg.rf.e2ec90c8492bbc41ce46ad4b3077b86a.jpg",
+        src: "data/Abra-7a300d6f799c48d1943cafaa5ab24e27_jpg.rf.cc822016dfca3b7bb372610cfd5bcb07.jpg",
         alt: "data/abra-2",
       },
       {
@@ -20,8 +20,7 @@ export const handlers = [
     ];
     return res(ctx.status(200), ctx.json(data));
   }),
-  rest.get(`${BASE_URL}/api/search`, (req, res, ctx) => {
-    const imagePaths = req.url.searchParams.getAll("imagePath");
+  rest.get(`${BASE_URL}/api/search`, (_, res, ctx) => {
     const data = [
       {
         src: "data/Abra-2eb2a528f9a247358452b3c740df69a0_jpg.rf.bdbfe2c31e8816602a2c897add07bc1d.jpg",
@@ -48,10 +47,10 @@ export const handlers = [
         score: 0.817970872,
       },
     ];
-    const matchingImage = data.find((item) => item.src.includes(imagePaths[0]));
 
-    const similarImages = data.filter((item) => item !== matchingImage);
-    const combinedData = [matchingImage, ...similarImages];
-    return res(ctx.status(200), ctx.json(combinedData));
+    return res(ctx.status(200), ctx.json(data));
+  }),
+  rest.get(`${BASE_URL}/api/indexImages`, (_, res, ctx) => {
+    return res(ctx.status(200), ctx.json({ message: "Indexing complete" }));
   }),
 ];

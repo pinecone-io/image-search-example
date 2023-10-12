@@ -11,13 +11,13 @@ export default defineConfig({
         target: "http://localhost:3000",
         changeOrigin: true,
         secure: false,
-        ws: true
+        ws: true,
       },
       "/data": {
         target: "http://localhost:3000",
         changeOrigin: true,
         secure: false,
-        ws: true
+        ws: true,
       },
     },
   },
@@ -28,6 +28,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "jsdom",
-    setupFiles: './tests/globalSetup/setup.ts',
+    setupFiles: "./tests/globalSetup/setup.ts",
+    cache: false,
   },
 });
