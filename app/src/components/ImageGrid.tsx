@@ -19,6 +19,7 @@ const ImageGrid: React.FC<ImageGridProps> = ({
       onClick={onClick}
     >
       <img
+        role="img"
         src={"/" + image.src}
         alt={image.alt}
         className="h-full w-full object-contain rounded-10px"
