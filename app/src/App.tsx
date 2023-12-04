@@ -92,7 +92,7 @@ const App = () => {
 
       <NavButtons setPage={setPage} currentPage={page} />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 grid-cols-3 gap-4 p-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-5">
         {searchResults.map((result, index) => (
           <SearchResultItem key={index} result={result} />
         ))}

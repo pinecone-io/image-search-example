@@ -51,7 +51,6 @@ export const handlers = [
     return res(ctx.status(200), ctx.json(data));
   }),
   rest.get(`${BASE_URL}/api/indexImages`, (_, res, ctx) => {
-    ctx.delay(1000);
     return res(ctx.status(200), ctx.json({ message: "Indexing complete" }));
   }),
 ];

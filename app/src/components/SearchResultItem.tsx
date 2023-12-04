@@ -6,7 +6,10 @@ interface SearchResultProps {
 
 const SearchResultItem: React.FC<SearchResultProps> = ({ result }) => {
   return (
-    <div className="relative w-full h-64 bg-gray-800 rounded-10px flex flex-col items-center justify-center mt-2 my-2 overflow-hidden">
+    <div
+      className="relative w-full h-64 bg-gray-800 rounded-10px flex flex-col items-center justify-center mt-2 my-2 overflow-hidden"
+      role="search-result"
+    >
       <img
         src={result.src}
         alt="Search result"
