@@ -12,8 +12,7 @@
     "dev:app": "vite --config app/vite.config.ts",
     "dev": "npm run dev:app & npm run dev:server",
     "build:app": "tsc && vite build app",
-    "lint": "eslint src",
-    "format": "prettier . --write",
+    "lint": "eslint app/src/ server/ --ext .ts,.tsx",
     "tsup": "tsup",
     "build": "tsup"
   },
