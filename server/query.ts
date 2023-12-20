@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
+import { Pinecone } from '@pinecone-database/pinecone';
 import { embedder } from "./embeddings.ts";
 import { getEnv } from "./utils/util.ts";
-import { Pinecone } from '@pinecone-database/pinecone';
 
 type Metadata = {
   imagePath: string;
@@ -22,7 +22,7 @@ const queryImages = async (imagePath: string) => {
       topK: 6
   });
   return queryResult.matches?.map(match => {
-    const metadata = match.metadata;
+    const { metadata } = match;
     return {
       src: metadata ? metadata.imagePath : '',
       score: match.score
