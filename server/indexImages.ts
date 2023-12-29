@@ -1,16 +1,22 @@
-import { Vector, utils } from "@pinecone-database/pinecone";
-import { dirname, join } from "path";
+import type { PineconeRecord } from "@pinecone-database/pinecone";
+import { Pinecone } from "@pinecone-database/pinecone";
 import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 import { embedder } from "./embeddings";
 import { listFiles } from "./utils/util";
-import { getPineconeClient } from "./utils/pinecone";
-import { PINECONE_DATA_DIR_PATH, PINECONE_INDEX } from "./utils/enviroment";
-
-const { waitUntilIndexIsReady } = utils;
-const { createIndexIfNotExists, chunkedUpsert } = utils;
+import { chunkedUpsert } from "./utils/chunkedUpsert";
+import {
+  PINECONE_API_KEY,
+  PINECONE_DATA_DIR_PATH,
+  PINECONE_ENVIRONMENT,
+  PINECONE_INDEX,
+} from "./utils/enviroment";
 
 // Index setup
-const pineconeClient = await getPineconeClient();
+const pinecone = new Pinecone({
+  apiKey: PINECONE_API_KEY,
+  environment: PINECONE_ENVIRONMENT,
+});
 
 function* chunkArray<T>(array: T[], chunkSize: number): Generator<T[]> {
   for (let i = 0; i < array.length; i += chunkSize) {
@@ -29,27 +35,35 @@ async function embedAndUpsert({
   const chunkGenerator = chunkArray(imagePaths, chunkSize);
 
   // Get the index
-  const index = pineconeClient.Index(PINECONE_INDEX);
+  const index = pinecone.Index(PINECONE_INDEX);
 
   // Embed each batch and upsert the embeddings into the index
   for await (const imagePaths of chunkGenerator) {
     await embedder.embedBatch(
       imagePaths,
       chunkSize,
-      async (embeddings: Vector[]) => {
+      async (embeddings: PineconeRecord[]) => {
         await chunkedUpsert(index, embeddings, "default");
-      },
+      }
     );
   }
 }
 
 const indexImages = async () => {
   try {
-    await createIndexIfNotExists(pineconeClient, PINECONE_INDEX, 512);
-    await waitUntilIndexIsReady(pineconeClient, PINECONE_INDEX);
+    // Create the index if it doesn't already exist
+    const indexList = await pinecone.listIndexes();
+    if (indexList.indexOf({ name: PINECONE_INDEX }) === -1) {
+      await pinecone.createIndex({
+        name: PINECONE_INDEX,
+        dimension: 512,
+        waitUntilReady: true,
+      });
+    }
+
     await embedder.init("Xenova/clip-vit-base-patch32");
     const imagePaths = await listFiles(
-      join(dirname(fileURLToPath(import.meta.url)), PINECONE_DATA_DIR_PATH),
+      join(dirname(fileURLToPath(import.meta.url)), PINECONE_DATA_DIR_PATH)
     );
     await embedAndUpsert({ imagePaths, chunkSize: 100 });
   } catch (error) {
