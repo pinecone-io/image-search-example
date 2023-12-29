@@ -1,17 +1,24 @@
 import { useState, useEffect } from "react";
-// import "./App.css";
+import Headline from "./components/Headline";
+import Header from "./components/Header";
+import ImageGrid from "./components/ImageGrid";
+import SearchResultItem from "./components/SearchResultItem";
+import NavButtons from "./components/NavButtons";
+import Footer from "./components/Footer";
 
-interface Image {
+export interface Image {
   src: string;
   alt: string;
 }
 
-interface SearchResult {
+export interface SearchResult {
   src: string;
   score: number;
 }
 
-function App() {
+const BASE_URL = import.meta.env.VITE_API_URL;
+
+const App = () => {
   const [images, setImages] = useState<Image[]>([]);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -24,7 +31,7 @@ function App() {
   useEffect(() => {
     const fetchImages = async () => {
       const response = await fetch(
-        `/getImages?page=${page}&pageSize=${pageSize}`
+        `${BASE_URL}/api/getImages?page=${page}&pageSize=${pageSize}`
       );
       const data: Image[] = await response.json();
       console.log(data);
@@ -36,7 +43,7 @@ function App() {
 
   const handleIndexClick = async () => {
     setIndexing(true);
-    const response = await fetch("/indexImages");
+    const response = await fetch(`${BASE_URL}/api/indexImages`);
     setIndexing(false);
     if (response.status === 200) {
       setIndexSuccess(true);
@@ -46,23 +53,22 @@ function App() {
   const handleImageClick = async (imagePath: string) => {
     setSelectedImage(imagePath);
     const response = await fetch(
-      `/search?imagePath=${encodeURIComponent(imagePath)}`
+      `${BASE_URL}/api/search?imagePath=${encodeURIComponent(imagePath)}`
     );
     const matchingImages: SearchResult[] = await response.json();
     setSearchResults(matchingImages);
   };
 
   return (
-    <div className="min-h-screen bg-gray-800 text-white w-full">
-      <div className="flex justify-center p-5">
-        <h1 className="text-4xl">Image Search</h1>
-      </div>
-      <div className="p-5">
+    <div className="min-h-screen text-white w-full">
+      <Header />
+      <Headline />
+      <div className="px-5">
         <button
           onClick={handleIndexClick}
           className={`${
-            indexSuccess ? "bg-green-500" : "bg-blue-400"
-          } mr-4 py-2 px-4 bg-green-500 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md focus:outline-none`}
+            indexSuccess ? "bg-green-500" : "bg-primary-100"
+          } mr-4 p-customIndexBtn bg-primary-100 hover:bg-primary-300 transition text-white text-base16 font-normal rounded-5px shadow-md focus:outline-none`}
         >
           Index
         </button>
@@ -73,54 +79,27 @@ function App() {
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-4 p-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-customImageGrid">
         {images.map((image, index) => (
-          <div
+          <ImageGrid
             key={index}
-            className={`w-full h-64 bg-gray-600 rounded-md flex items-center justify-center ${
-              image.src === selectedImage ? "border-4 border-blue-500" : ""
-            }`}
+            image={image}
+            isSelected={image.src === selectedImage}
             onClick={() => handleImageClick(image.src)}
-          >
-            <img src={image.src} alt={image.alt} />
-          </div>
+          />
         ))}
       </div>
 
-      <div className="flex justify-center p-5">
-        <button
-          className="py-2 px-4 bg-blue-500 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md focus:outline-none mr-4"
-          onClick={() => setPage((prevPage) => Math.max(prevPage - 1, 1))}
-        >
-          Previous
-        </button>
-        <button
-          className="py-2 px-4 bg-blue-500 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md focus:outline-none"
-          onClick={() => setPage((prevPage) => prevPage + 1)}
-        >
-          Next
-        </button>
-      </div>
+      <NavButtons setPage={setPage} currentPage={page} />
 
-      <div className="grid grid-cols-3 gap-4 p-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-5">
         {searchResults.map((result, index) => (
-          <div
-            key={index}
-            className="w-full h-64 bg-gray-600 rounded-md flex flex-col items-center justify-center my-2 overflow-hidden"
-          >
-            <img
-              src={result.src}
-              alt="Search result"
-              className="w-full h-4/5 object-cover"
-            />
-            <p className="w-full text-center bg-blue-500 text-white">
-              Score: {result.score}
-            </p>
-          </div>
+          <SearchResultItem key={index} result={result} />
         ))}
       </div>
+      <Footer />
     </div>
   );
-}
+};
 
 export default App;
