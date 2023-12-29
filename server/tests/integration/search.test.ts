@@ -7,7 +7,7 @@ describe("Search Images", () => {
     const imagePath =
       "data/Abra-2eb2a528f9a247358452b3c740df69a0_jpg.rf.bdbfe2c31e8816602a2c897add07bc1d.jpg";
 
-    const res = await request(viteNodeApp).get("/search").query({
+    const res = await request(viteNodeApp).get("/api/search").query({
       imagePath,
     });
 
