@@ -8,6 +8,29 @@ To complete this tutorial, you'll need a Pinecone account. If you don't have one
 
 You'll also need Node.js and npm installed. You can download Node.js from [nodejs.org](https://nodejs.org/en/download/).
 
+## Required configuration
+
+In order to run this example, you have to supply the Pinecone credentials needed to interact with the Pinecone API. You can find these credentials in the [Pinecone web console](https://app.pinecone.io) under **API Keys**. This project uses `dotenv` to easily load values from the `.env` file into the environment when executing.
+
+Copy the template file:
+
+```sh
+cp .env.example .env
+```
+
+And fill in your API key and index name:
+
+```sh
+PINECONE_API_KEY=<your-api-key>
+PINECONE_INDEX="image-search"
+PINECONE_CLOUD="aws"
+PINECONE_REGION="us-west-2"
+```
+
+`PINECONE_INDEX` is the name of the index where this demo will store and query embeddings. You can change `PINECONE_INDEX` to any name you like, but make sure the name not going to collide with any indexes you are already using.
+
+`PINECONE_CLOUD` and `PINECONE_REGION` define where the index should be deployed. Currently, this is the only available cloud and region combination (`aws` and `us-west-2`), so it's recommended to leave them defaulted.
+
 ## Dependencies
 
 You can see the full list of dependencies in the `package.json` file, but the main ones are:
@@ -44,14 +67,17 @@ const indexImages = async () => {
     // Create the index if it doesn't already exist
     const indexList = await pinecone.listIndexes();
     if (indexList.indexOf({ name: indexName }) === -1) {
-      await pinecone.createIndex({ name: indexName, dimension: 512, waitUntilReady: true })
+      await pinecone.createIndex({
+        name: indexName,
+        dimension: 512,
+        waitUntilReady: true,
+      });
     }
 
     await embedder.init("Xenova/clip-vit-base-patch32");
     const imagePaths = await listFiles("./data");
     await embedAndUpsert({ imagePaths, chunkSize: 100 });
     return;
-
   } catch (error) {
     console.error(error);
     throw error;
@@ -65,7 +91,6 @@ In this example, we're not going to use any text inputs, so we just pass an empt
 
 ```ts
 class Embedder {
-
   private processor: Processor;
 
   private model: PreTrainedModel;
@@ -77,19 +102,21 @@ class Embedder {
     this.model = await AutoModel.from_pretrained(modelName);
     this.tokenizer = await AutoTokenizer.from_pretrained(modelName);
     this.processor = await AutoProcessor.from_pretrained(modelName);
-
   }
 
   // Embeds an image and returns the embedding
-  async embed(imagePath: string, metadata?: RecordMetadata): Promise<PineconeRecord> {
+  async embed(
+    imagePath: string,
+    metadata?: RecordMetadata
+  ): Promise<PineconeRecord> {
     try {
       // Load the image
       const image = await RawImage.read(imagePath);
       // Prepare the image and text inputs
       const image_inputs = await this.processor(image);
-      const text_inputs = this.tokenizer([''], {
+      const text_inputs = this.tokenizer([""], {
         padding: true,
-        truncation: true
+        truncation: true,
       });
       // Embed the image
       const output = await this.model({ ...text_inputs, ...image_inputs });
@@ -97,7 +124,7 @@ class Embedder {
       const { data: embeddings } = image_embeds;
 
       // Create an id for the image
-      const id = createHash('md5').update(imagePath).digest('hex');
+      const id = createHash("md5").update(imagePath).digest("hex");
 
       // Return the embedding in a format ready for Pinecone
       return {
@@ -122,8 +149,8 @@ class Embedder {
     const batches = sliceIntoChunks<string>(imagePaths, batchSize);
     for (const batch of batches) {
       const embeddings = await Promise.all(
-        batch.map(imagePath => this.embed(imagePath)
-        ));
+        batch.map((imagePath) => this.embed(imagePath))
+      );
       await onDoneBatch(embeddings);
     }
   }
@@ -133,7 +160,13 @@ class Embedder {
 The `embedAndUpsert` function takes a list of image paths and a chunk size, and proceeds to embed and upsert these images in chunks:
 
 ```ts
-async function embedAndUpsert({ imagePaths, chunkSize }: { imagePaths: string[], chunkSize: number }) {
+async function embedAndUpsert({
+  imagePaths,
+  chunkSize,
+}: {
+  imagePaths: string[];
+  chunkSize: number;
+}) {
   // Chunk the image paths into batches of size chunkSize
   const chunkGenerator = chunkArray(imagePaths, chunkSize);
 
@@ -142,9 +175,13 @@ async function embedAndUpsert({ imagePaths, chunkSize }: { imagePaths: string[],
 
   // Embed each batch and upsert the embeddings into the index
   for await (const imagePaths of chunkGenerator) {
-    await embedder.embedBatch(imagePaths, chunkSize, async (embeddings: PineconeRecord[]) => {
-      await chunkedUpsert(index, embeddings, "default");
-    });
+    await embedder.embedBatch(
+      imagePaths,
+      chunkSize,
+      async (embeddings: PineconeRecord[]) => {
+        await chunkedUpsert(index, embeddings, "default");
+      }
+    );
   }
 }
 ```
@@ -165,7 +202,7 @@ Once an image is selected, it's path will be sent to the `/search` endpoint, whi
 ```ts
 type Metadata = {
   imagePath: string;
-}
+};
 
 const indexName = getEnv("PINECONE_INDEX");
 const pinecone = new Pinecone();
@@ -175,18 +212,18 @@ await embedder.init("Xenova/clip-vit-base-patch32");
 
 const queryImages = async (imagePath: string) => {
   const queryEmbedding = await embedder.embed(imagePath);
-  const queryResult = await index.namespace('default').query({
-      vector: queryEmbedding.values,
-      includeMetadata: true,
-      includeValues: true,
-      topK: 6
+  const queryResult = await index.namespace("default").query({
+    vector: queryEmbedding.values,
+    includeMetadata: true,
+    includeValues: true,
+    topK: 6,
   });
-  return queryResult.matches?.map(match => {
+  return queryResult.matches?.map((match) => {
     const metadata = match.metadata;
     return {
-      src: metadata ? metadata.imagePath : '',
-      score: match.score
-    };  
+      src: metadata ? metadata.imagePath : "",
+      score: match.score,
+    };
   });
 };
 ```
