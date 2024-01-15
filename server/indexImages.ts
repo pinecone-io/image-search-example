@@ -1,8 +1,11 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable dot-notation */
 import * as dotenv from "dotenv";
-import { Pinecone } from "@pinecone-database/pinecone";
-import type { PineconeRecord } from "@pinecone-database/pinecone";
+import {
+  Pinecone,
+  type PineconeRecord,
+  type ServerlessSpecCloudEnum,
+} from "@pinecone-database/pinecone";
 import { embedder } from "./embeddings.ts";
 import { getEnv, listFiles } from "./utils/util.ts";
 import { chunkedUpsert } from "./utils/chunkedUpsert.ts";
@@ -11,6 +14,8 @@ dotenv.config();
 
 // Index setup
 const indexName = getEnv("PINECONE_INDEX");
+const indexCloud = getEnv("PINECONE_CLOUD") as ServerlessSpecCloudEnum;
+const indexRegion = getEnv("PINECONE_REGION");
 const pinecone = new Pinecone();
 
 function* chunkArray<T>(array: T[], chunkSize: number): Generator<T[]> {
@@ -52,7 +57,7 @@ const indexImages = async () => {
       await pinecone.createIndex({
         name: indexName,
         dimension: 512,
-        spec: { serverless: { region: "us-west-2", cloud: "aws" } },
+        spec: { serverless: { region: indexRegion, cloud: indexCloud } },
         waitUntilReady: true,
       });
     }

@@ -52,6 +52,8 @@ function App() {
     setSearchResults(matchingImages);
   };
 
+  console.log("searchResults: ", searchResults);
+
   return (
     <div className="min-h-screen bg-gray-800 text-white w-full">
       <div className="flex justify-center p-5">
