@@ -11,7 +11,8 @@
     "dev:server": "nodemon --watch 'server/**/*.ts' --exec 'node --loader ts-node/esm --require tsconfig-paths/register' server/index.ts",
     "dev:app": "vite --config app/vite.config.ts",
     "dev": "npm run dev:app & npm run dev:server",
-    "build:app": "tsc app && vite build app",
+    "build:app": "tsc && vite build app",
+    "lint": "eslint app/src/ server/ --ext .ts,.tsx",
     "tsup": "tsup",
     "build": "tsup"
   },
@@ -26,7 +27,7 @@
   "author": "Roie Schwaber-Cohen",
   "license": "MIT",
   "dependencies": {
-    "@pinecone-database/pinecone": "^1.0.0",
+    "@pinecone-database/pinecone": "^2.0.0",
     "@xenova/transformers": "^2.2.0",
     "console-table-printer": "^2.11.1",
     "cross-fetch": "^3.1.6",
