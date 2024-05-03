@@ -1,6 +1,6 @@
 # Image search
 
-In this tutorial, we'll learn how to build an image search engine using Pinecone and the CLIP model. We'll use a small dataset of images (included in this repository) and show how to embed and index them in Pinecone. We'll then show how to query the index to find similar images.
+In this tutorial, we'll learn how to build an image search engine using Pinecone and the CLIP model. We'll use a small dataset of images (included in this repository) and show how to embed and index them in Pinecone. We'll then show how to query the index to find similar images. Finally, we'll demonstrate upserting and deleting images and their vector embeddings.
 
 ## Prerequisites
 
@@ -24,7 +24,7 @@ And fill in your API key and index name:
 PINECONE_API_KEY=<your-api-key>
 PINECONE_INDEX="image-search"
 PINECONE_CLOUD="aws"
-PINECONE_REGION="us-west-2"
+PINECONE_REGION="us-east-1"
 ```
 
 `PINECONE_INDEX` is the name of the index where this demo will store and query embeddings. You can change `PINECONE_INDEX` to any name you like, but make sure the name not going to collide with any indexes you are already using.
@@ -230,9 +230,9 @@ const queryImages = async (imagePath: string) => {
 
 ## The application
 
-The application is a simple React app that allows us to select an image and query the index for similar images. The app is served by the Express server, which also exposes the `/search` and `/indexImages` endpoints.
+The application is a simple React app that allows us to select an image and query the index for similar images. The app is served by the Express server, which also exposes the `/search`, `/indexImages`, `/upsertImages`, and `/deleteImage` endpoints.
 
-All the application does is paginate through the results of the query and display them in a grid. The main `App` component is responsible for rendering the UI and calling the `/search` endpoint when an image is selected.
+The front end paginates the query results and displays them in a grid. The main `App` component renders the UI and calls the `/search` endpoint when an image is selected.
 
 When an image is clicked, we call the following function:
 
@@ -246,6 +246,10 @@ const handleImageClick = async (imagePath: string) => {
   setSearchResults(matchingImages);
 };
 ```
+
+When uploading a new image, we reuse the `embedAndUpsert` function to embed and upsert the image into the index.  The new image is immediately queryable without needing to rebuild the index. This data freshness is a major advantage of using a vector database like Pinecone.
+
+To delete an image, we call the `/deleteImage` endpoint with the image path. We need to find the imageʼs Pinecone ID before deleting the vector embedding. We can then remove the vector embedding from the index.
 
 And here's the final result:
 
