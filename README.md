@@ -247,6 +247,23 @@ const handleImageClick = async (imagePath: string) => {
 };
 ```
 
+## Running the application
+
+In order to run the aaplication:
+
+1. If you havn't already, clone this repository. 
+2. Then run:
+
+```bash
+npm run dev
+```
+
+You should recieve a message: "Server started at http://localhost:3000". Copy this url into your web browser.
+
+3. Click the green "Index" button in the top left of the screen. Wait for the app to finish loading. 
+4. Select an image. 
+5. You will now be shown all similar image found within the dataset. 
+
 And here's the final result:
 
 ![](demo.gif)
