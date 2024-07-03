@@ -252,12 +252,6 @@ const handleImageClick = async (imagePath: string) => {
 In order to run the aaplication:
 
 1. If you havn't already, clone this repository. 
-2. Run the following in the terminal:
-
-```bash
-npm run build:app
-```
-
 3. Then run:
 
 ```bash
