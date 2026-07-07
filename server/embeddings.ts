@@ -7,6 +7,11 @@ import { sliceIntoChunks } from "./utils/util.js";
 
 export const DEFAULT_MODEL = "Xenova/clip-vit-base-patch32";
 
+// The embedder always produces dense values, but v8's `PineconeRecord` types
+// `values` as optional (a record may carry only sparseValues). Narrow it here
+// so callers can pass `.values` straight into query/upsert without guards.
+export type DenseRecord = PineconeRecord & { values: number[] };
+
 class Embedder {
 
   private processor: Processor;
@@ -37,7 +42,7 @@ class Embedder {
   }
 
   // Embeds an image and returns the embedding
-  async embed(imagePath: string, metadata?: RecordMetadata): Promise<PineconeRecord> {
+  async embed(imagePath: string, metadata?: RecordMetadata): Promise<DenseRecord> {
     try {
       // Ensure the model is loaded before embedding.
       await this.ready();
