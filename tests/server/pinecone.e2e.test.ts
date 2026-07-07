@@ -105,6 +105,10 @@ describe.skipIf(!HAS_KEY)("Pinecone live end-to-end", () => {
     const target = fixtures[0];
     const query = await embedder.embed(target);
 
+    // Serverless indexes are eventually consistent: recordCount in
+    // describeIndexStats can tick up before every vector is queryable. Poll
+    // until the query image's own vector is the top match, rather than until
+    // *any* match exists, so a freshness lag doesn't surface a different image.
     const result = await waitFor(
       () =>
         index.namespace(NAMESPACE).query({
@@ -112,7 +116,7 @@ describe.skipIf(!HAS_KEY)("Pinecone live end-to-end", () => {
           topK: 3,
           includeMetadata: true,
         }),
-      (r) => (r.matches?.length ?? 0) > 0
+      (r) => r.matches?.[0]?.id === query.id
     );
 
     expect(result.matches && result.matches.length).toBeGreaterThan(0);
