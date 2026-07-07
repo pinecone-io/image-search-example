@@ -18,9 +18,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -31,7 +31,7 @@ jobs:
       # tests and cached here. `npm ci` wipes node_modules, so this restore runs
       # after it and repopulates the model cache before the tests need it.
       - name: Cache HuggingFace model
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: node_modules/@huggingface/transformers/.cache
           key: hf-model-clip-vit-base-patch32-v1
@@ -45,6 +45,11 @@ jobs:
       - name: Test
         run: npm test
 
+      # Real Vite production build of the frontend. Catches bundling/plugin
+      # breaks (e.g. a Vite major bump) that `tsc --noEmit` alone won't surface.
+      - name: Build frontend
+        run: npm run build:app
+
   # Live end-to-end test against a real Pinecone serverless index. Runs on
   # pushes to main and manual dispatch (not on every PR), and only does real
   # work when the PINECONE_API_KEY secret is configured — without it the test
@@ -53,9 +58,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -63,7 +68,7 @@ jobs:
       - run: npm ci
 
       - name: Cache HuggingFace model
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: node_modules/@huggingface/transformers/.cache
           key: hf-model-clip-vit-base-patch32-v1
