@@ -26,19 +26,30 @@ async function listFiles(dir: string): Promise<string[]> {
   return filePaths;
 }
 
-export const getEnv = (key: string): string => {
+// Sensible defaults for where the serverless index is deployed, so the app
+// doesn't refuse to start over an unset region. These match the free-tier
+// serverless combination and the values documented in the README.
+export const DEFAULT_PINECONE_CLOUD = "aws";
+export const DEFAULT_PINECONE_REGION = "us-east-1";
+
+// Reads an environment variable. When a `defaultValue` is supplied, a missing
+// or empty variable falls back to it instead of throwing; otherwise the
+// variable is required and its absence is a hard error.
+export const getEnv = (key: string, defaultValue?: string): string => {
   const value = process.env[key];
   if (!value) {
+    if (defaultValue !== undefined) {
+      return defaultValue;
+    }
     throw new Error(`${key} environment variable not set`);
   }
   return value;
 };
 
 const validateEnvironmentVariables = () => {
+  // Only these are truly required; cloud and region default (see above).
   getEnv("PINECONE_API_KEY");
   getEnv("PINECONE_INDEX");
-  getEnv("PINECONE_CLOUD");
-  getEnv("PINECONE_REGION");
 };
 
 export { listFiles, sliceIntoChunks, validateEnvironmentVariables };

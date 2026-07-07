@@ -3,7 +3,12 @@
 import * as dotenv from "dotenv";
 import { Pinecone } from "@pinecone-database/pinecone";
 import { embedder } from "./embeddings.ts";
-import { getEnv, listFiles } from "./utils/util.ts";
+import {
+  getEnv,
+  listFiles,
+  DEFAULT_PINECONE_CLOUD,
+  DEFAULT_PINECONE_REGION,
+} from "./utils/util.ts";
 import { embedAndUpsert } from "./utils/embedAndUpsert.js";
 
 dotenv.config();
@@ -11,8 +16,8 @@ dotenv.config();
 // Index setup
 const indexImages = async () => {
   const indexName = getEnv("PINECONE_INDEX");
-  const indexCloud = getEnv("PINECONE_CLOUD");
-  const indexRegion = getEnv("PINECONE_REGION");
+  const indexCloud = getEnv("PINECONE_CLOUD", DEFAULT_PINECONE_CLOUD);
+  const indexRegion = getEnv("PINECONE_REGION", DEFAULT_PINECONE_REGION);
   const pinecone = new Pinecone();
 
   try {
