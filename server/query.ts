@@ -3,7 +3,7 @@ import { Pinecone } from '@pinecone-database/pinecone';
 import { embedder } from "./embeddings.ts";
 import { getEnv } from "./utils/util.ts";
 
-type Metadata = {
+export type Metadata = {
   imagePath: string;
 }
 
