@@ -1,4 +1,4 @@
-import { AutoTokenizer, AutoProcessor, AutoModel, RawImage, Processor, PreTrainedModel, PreTrainedTokenizer } from "@xenova/transformers";
+import { AutoTokenizer, AutoProcessor, AutoModel, RawImage, Processor, PreTrainedModel, PreTrainedTokenizer } from "@huggingface/transformers";
 import type { RecordMetadata, PineconeRecord } from "@pinecone-database/pinecone";
 import { createHash } from 'crypto';
 
