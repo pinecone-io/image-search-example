@@ -36,7 +36,6 @@ const indexImages = async () => {
     await embedder.ready();
     const imagePaths = await listFiles("./data");
     await embedAndUpsert({ imagePaths, chunkSize: 100, index });
-    return;
   } catch (error) {
     console.error(error);
     throw error;
