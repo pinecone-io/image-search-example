@@ -12,12 +12,12 @@ import { embedAndUpsert } from "./utils/embedAndUpsert.js";
 dotenv.config();
 
 // Index setup
-const indexName = getEnv("PINECONE_INDEX");
-const indexCloud = getEnv("PINECONE_CLOUD") as ServerlessSpecCloudEnum;
-const indexRegion = getEnv("PINECONE_REGION");
-const pinecone = new Pinecone();
-
 const indexImages = async () => {
+  const indexName = getEnv("PINECONE_INDEX");
+  const indexCloud = getEnv("PINECONE_CLOUD") as ServerlessSpecCloudEnum;
+  const indexRegion = getEnv("PINECONE_REGION");
+  const pinecone = new Pinecone();
+
   try {
     // Create the index if it doesn't already exist
     const indexList = await pinecone.listIndexes();
@@ -33,7 +33,7 @@ const indexImages = async () => {
     // Get the index
     const index = pinecone.index(indexName);
 
-    await embedder.init("Xenova/clip-vit-base-patch32");
+    await embedder.ready();
     const imagePaths = await listFiles("./data");
     await embedAndUpsert({ imagePaths, chunkSize: 100, index });
     return;

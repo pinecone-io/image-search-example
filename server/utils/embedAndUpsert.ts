@@ -1,5 +1,5 @@
-import { embedder } from "../embeddings.js";
 import type { Index, PineconeRecord } from "@pinecone-database/pinecone";
+import { embedder } from "../embeddings.js";
 import { chunkedUpsert } from "./chunkedUpsert.js";
 
 function* chunkArray<T>(array: T[], chunkSize: number): Generator<T[]> {

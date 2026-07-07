@@ -1,0 +1,41 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Dependabot opens pull requests, so the `pull_request` trigger above runs this
+# suite against every dependency bump — which is the whole point: a bump that
+# breaks the CLIP embedding pipeline or the Pinecone/Express integration fails here.
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # The CLIP model weights (~600MB) are downloaded once by the integration
+      # tests and cached here. `npm ci` wipes node_modules, so this restore runs
+      # after it and repopulates the model cache before the tests need it.
+      - name: Cache HuggingFace model
+        uses: actions/cache@v4
+        with:
+          path: node_modules/@huggingface/transformers/.cache
+          key: hf-model-clip-vit-base-patch32-v1
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test

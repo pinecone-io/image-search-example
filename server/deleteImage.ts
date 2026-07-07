@@ -1,18 +1,21 @@
-import { Pinecone } from "@pinecone-database/pinecone";
+import { Pinecone, type Index } from "@pinecone-database/pinecone";
 import fs from "fs/promises";
 import { embedder } from "./embeddings.ts";
 import { getEnv } from "./utils/util.ts";
 import { type Metadata } from "./query.js";
 
-const indexName = getEnv("PINECONE_INDEX");
-const pinecone = new Pinecone();
-const index = pinecone.index<Metadata>(indexName);
-
-await embedder.init("Xenova/clip-vit-base-patch32");
+let index: Index<Metadata>;
+const getIndex = (): Index<Metadata> => {
+  if (!index) {
+    const pinecone = new Pinecone();
+    index = pinecone.index<Metadata>(getEnv("PINECONE_INDEX"));
+  }
+  return index;
+};
 
 const getPineconeId = async (imagePath: string) => {
   const queryEmbedding = await embedder.embed(imagePath);
-  const queryResult = await index.namespace("default").query({
+  const queryResult = await getIndex().namespace("default").query({
     vector: queryEmbedding.values,
     includeMetadata: true,
     includeValues: false,
@@ -24,7 +27,7 @@ const getPineconeId = async (imagePath: string) => {
 
 const deleteImage = async (imagePath: string) => {
   const pineconeId = await getPineconeId(imagePath);
-  await index.namespace("default").deleteOne(pineconeId);
+  await getIndex().namespace("default").deleteOne(pineconeId);
   // Append _deleted to the image path for demo purposes
   await fs.rename(imagePath, `${imagePath}_deleted`);
 };

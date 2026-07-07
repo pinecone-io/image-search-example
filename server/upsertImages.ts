@@ -2,11 +2,9 @@ import { Pinecone } from "@pinecone-database/pinecone";
 import { embedAndUpsert } from "./utils/embedAndUpsert.js";
 import { getEnv } from "./utils/util.js";
 
-const indexName = getEnv("PINECONE_INDEX");
-const pinecone = new Pinecone();
-
 const upsertImages = async (imagePaths: string[]) => {
-  const index = pinecone.index(indexName);
+  const pinecone = new Pinecone();
+  const index = pinecone.index(getEnv("PINECONE_INDEX"));
   await embedAndUpsert({ imagePaths, chunkSize: 100, index });
 };
 

@@ -271,3 +271,23 @@ You should recieve a message: "Server started at http://localhost:3000". Copy th
 And here's the final result:
 
 ![](demo.gif)
+
+## Testing
+
+The project uses [Vitest](https://vitest.dev/). Tests are organized in layers so that dependency bumps (e.g. Dependabot PRs) are caught before they silently break the example.
+
+```bash
+npm test            # run the whole suite once
+npm run test:watch  # watch mode
+npm run test:server # server/model tests only
+npm run typecheck   # tsc --noEmit
+```
+
+What's covered today:
+
+- **Unit tests** (`tests/server/*.test.ts`) — pure logic: chunking, `getEnv`, file listing/filtering, and pagination. Fast, no network or model.
+- **Model integration test** (`tests/server/embeddings.integration.test.ts`) — loads the real CLIP model via `@huggingface/transformers` and embeds committed fixture images (`tests/fixtures/images/`). It asserts the embeddings are 512-dimensional and finite, deterministic across runs, and *semantically meaningful* (a nearest-neighbor search returns same-subject images — the same operation the app performs). This is the test most likely to catch a breaking change in `@huggingface/transformers` or `onnxruntime-node`. The first run downloads the model weights (~600MB); subsequent runs use the local cache.
+
+These run automatically in CI (`.github/workflows/test.yml`) on every push and pull request, including Dependabot bumps. The CI job caches the model download.
+
+> **Not yet implemented** (planned next layers): Pinecone client integration (mocked HTTP for CI plus an opt-in live end-to-end test gated on `PINECONE_API_KEY`), Express API tests via `supertest`, and React component tests for the frontend.

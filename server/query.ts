@@ -1,5 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { Pinecone } from '@pinecone-database/pinecone';
+import { Pinecone, type Index } from '@pinecone-database/pinecone';
 import { embedder } from "./embeddings.ts";
 import { getEnv } from "./utils/util.ts";
 
@@ -7,15 +7,18 @@ export type Metadata = {
   imagePath: string;
 }
 
-const indexName = getEnv("PINECONE_INDEX");
-const pinecone = new Pinecone();
-const index = pinecone.index<Metadata>(indexName);
-
-await embedder.init("Xenova/clip-vit-base-patch32");
+let index: Index<Metadata>;
+const getIndex = (): Index<Metadata> => {
+  if (!index) {
+    const pinecone = new Pinecone();
+    index = pinecone.index<Metadata>(getEnv("PINECONE_INDEX"));
+  }
+  return index;
+};
 
 const queryImages = async (imagePath: string) => {
   const queryEmbedding = await embedder.embed(imagePath);
-  const queryResult = await index.namespace('default').query({
+  const queryResult = await getIndex().namespace('default').query({
       vector: queryEmbedding.values,
       includeMetadata: true,
       includeValues: true,
