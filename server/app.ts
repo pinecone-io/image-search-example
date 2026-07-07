@@ -1,4 +1,5 @@
 import express, { Request, Response, Router } from 'express';
+import { rateLimit } from 'express-rate-limit';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import path, { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
@@ -22,6 +23,18 @@ export interface CreateAppOptions {
 export function createApp(options: CreateAppOptions = {}): express.Application {
   const { proxy = true } = options;
   const app: express.Application = express();
+
+  // Rate limit all routes: several perform filesystem access (serving images,
+  // the SPA fallback) or trigger embedding/indexing work. The limit is
+  // generous enough not to interfere with normal demo use.
+  app.use(
+    rateLimit({
+      windowMs: 15 * 60 * 1000,
+      limit: 1000,
+      standardHeaders: 'draft-7',
+      legacyHeaders: false,
+    })
+  );
 
   // API routes are always mounted so they can be exercised in every mode.
   const router = Router();
