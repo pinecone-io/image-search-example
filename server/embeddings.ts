@@ -5,6 +5,8 @@ import { createHash } from 'crypto';
 import { sliceIntoChunks } from "./utils/util.js";
 
 
+export const DEFAULT_MODEL = "Xenova/clip-vit-base-patch32";
+
 class Embedder {
 
   private processor: Processor;
@@ -12,6 +14,10 @@ class Embedder {
   private model: PreTrainedModel;
 
   private tokenizer: PreTrainedTokenizer;
+
+  // Caches the in-flight/completed init so the model is only loaded once,
+  // no matter how many entry points call ready().
+  private initPromise: Promise<void> | null = null;
 
   async init(modelName: string) {
     // Load the model, tokenizer and processor
@@ -21,9 +27,20 @@ class Embedder {
 
   }
 
+  // Idempotent, lazy initialization. Safe to call from every entry point:
+  // the model is loaded at most once and subsequent calls await the same promise.
+  async ready(modelName: string = DEFAULT_MODEL): Promise<void> {
+    if (!this.initPromise) {
+      this.initPromise = this.init(modelName);
+    }
+    return this.initPromise;
+  }
+
   // Embeds an image and returns the embedding
   async embed(imagePath: string, metadata?: RecordMetadata): Promise<PineconeRecord> {
     try {
+      // Ensure the model is loaded before embedding.
+      await this.ready();
       // Load the image
       const image = await RawImage.read(imagePath);
       // Prepare the image and text inputs
@@ -60,6 +77,7 @@ class Embedder {
     batchSize: number,
     onDoneBatch: (embeddings: PineconeRecord[]) => void
   ) {
+    await this.ready();
     const batches = sliceIntoChunks<string>(imagePaths, batchSize);
     for (const batch of batches) {
       const embeddings = await Promise.all(

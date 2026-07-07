@@ -12,7 +12,7 @@ interface Route {
   handler: (req: express.Request, res: express.Response) => void;
 }
 
-function getImagesInRange(
+export function getImagesInRange(
   page: number,
   pageSize: number,
   imagePaths: string[]
