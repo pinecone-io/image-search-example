@@ -4,12 +4,17 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
-# Dependabot opens pull requests, so the `pull_request` trigger above runs this
-# suite against every dependency bump — which is the whole point: a bump that
-# breaks the CLIP embedding pipeline or the Pinecone/Express integration fails here.
+# Dependabot opens pull requests, so the `pull_request` trigger above runs the
+# `test` job against every dependency bump — which is the whole point: a bump
+# that breaks the CLIP embedding pipeline or the Pinecone/Express integration
+# fails here.
 
 jobs:
+  # Fast, credential-free suite: unit tests, the real CLIP model integration
+  # test, the mocked Pinecone tests, the Express API tests, and the React
+  # component tests. The live Pinecone e2e test auto-skips (no API key).
   test:
     runs-on: ubuntu-latest
     steps:
@@ -39,3 +44,31 @@ jobs:
 
       - name: Test
         run: npm test
+
+  # Live end-to-end test against a real Pinecone serverless index. Runs on
+  # pushes to main and manual dispatch (not on every PR), and only does real
+  # work when the PINECONE_API_KEY secret is configured — without it the test
+  # self-skips. It creates and tears down a uniquely-named throwaway index.
+  e2e:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Cache HuggingFace model
+        uses: actions/cache@v4
+        with:
+          path: node_modules/@huggingface/transformers/.cache
+          key: hf-model-clip-vit-base-patch32-v1
+
+      - name: Live Pinecone e2e
+        env:
+          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+        run: npm run test:server
