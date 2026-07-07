@@ -277,17 +277,29 @@ And here's the final result:
 The project uses [Vitest](https://vitest.dev/). Tests are organized in layers so that dependency bumps (e.g. Dependabot PRs) are caught before they silently break the example.
 
 ```bash
-npm test            # run the whole suite once
+npm test            # run the whole suite once (server + frontend)
 npm run test:watch  # watch mode
-npm run test:server # server/model tests only
+npm run test:server # server/model/Pinecone tests only
+npm run test:app    # React component tests only
 npm run typecheck   # tsc --noEmit
 ```
 
-What's covered today:
+What's covered:
 
-- **Unit tests** (`tests/server/*.test.ts`) — pure logic: chunking, `getEnv`, file listing/filtering, and pagination. Fast, no network or model.
+- **Unit tests** (`tests/server/util.test.ts`, `pagination.test.ts`) — pure logic: chunking, `getEnv`, file listing/filtering, and pagination. Fast, no network or model.
 - **Model integration test** (`tests/server/embeddings.integration.test.ts`) — loads the real CLIP model via `@huggingface/transformers` and embeds committed fixture images (`tests/fixtures/images/`). It asserts the embeddings are 512-dimensional and finite, deterministic across runs, and *semantically meaningful* (a nearest-neighbor search returns same-subject images — the same operation the app performs). This is the test most likely to catch a breaking change in `@huggingface/transformers` or `onnxruntime-node`. The first run downloads the model weights (~600MB); subsequent runs use the local cache.
+- **Pinecone wrapper tests** (`tests/server/pinecone.mocked.test.ts`) — the SDK and model are mocked to verify our query/delete logic (result mapping, namespace/params, id lookup + file rename) quickly and offline.
+- **API tests** (`tests/server/api.test.ts`) — drive the real Express app with [`supertest`](https://github.com/ladjs/supertest), exercising routing, `multer` file uploads, query params, status codes, and error handling (the Pinecone/model layer mocked).
+- **React component tests** (`app/src/App.test.tsx`) — render the real `App` with `fetch` stubbed and verify the frontend calls the right endpoints and reflects responses (mount fetch, search, indexing, pagination).
 
-These run automatically in CI (`.github/workflows/test.yml`) on every push and pull request, including Dependabot bumps. The CI job caches the model download.
+### Live Pinecone end-to-end test
 
-> **Not yet implemented** (planned next layers): Pinecone client integration (mocked HTTP for CI plus an opt-in live end-to-end test gated on `PINECONE_API_KEY`), Express API tests via `supertest`, and React component tests for the frontend.
+`tests/server/pinecone.e2e.test.ts` runs the real SDK operations (`createIndex`, `upsert`, `query`, `deleteOne`) against a live serverless index — the truest signal that a `@pinecone-database/pinecone` bump hasn't broken the app. It is **skipped unless `PINECONE_API_KEY` is set**, and creates then deletes a uniquely-named throwaway index:
+
+```bash
+PINECONE_API_KEY=... npm run test:server
+```
+
+### CI
+
+Tests run automatically in CI (`.github/workflows/test.yml`) on every push and pull request, including Dependabot bumps; the model download is cached. The live e2e test runs as a separate job on pushes to `main` and manual dispatch, and only does real work when the `PINECONE_API_KEY` repository secret is configured.
