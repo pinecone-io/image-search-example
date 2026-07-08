@@ -45,6 +45,23 @@ describe("getEnv", () => {
     expect(() => getEnv("__TEST_EMPTY_ENV__")).toThrow();
     delete process.env.__TEST_EMPTY_ENV__;
   });
+
+  it("returns the default when the variable is missing", () => {
+    delete process.env.__TEST_DEFAULT_ENV__;
+    expect(getEnv("__TEST_DEFAULT_ENV__", "fallback")).toBe("fallback");
+  });
+
+  it("returns the default when the variable is an empty string", () => {
+    process.env.__TEST_DEFAULT_ENV__ = "";
+    expect(getEnv("__TEST_DEFAULT_ENV__", "fallback")).toBe("fallback");
+    delete process.env.__TEST_DEFAULT_ENV__;
+  });
+
+  it("prefers the set value over the default", () => {
+    process.env.__TEST_DEFAULT_ENV__ = "real";
+    expect(getEnv("__TEST_DEFAULT_ENV__", "fallback")).toBe("real");
+    delete process.env.__TEST_DEFAULT_ENV__;
+  });
 });
 
 describe("listFiles", () => {
