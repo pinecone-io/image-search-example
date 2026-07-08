@@ -203,7 +203,7 @@ function App() {
             <img
               src={result.src}
               alt="Search result"
-              className="w-full h-4/5 object-cover"
+              className="w-full h-4/5 object-contain"
             />
             <p className="w-full text-center bg-blue-500 text-white">
               Score: {result.score}
