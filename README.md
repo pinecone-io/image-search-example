@@ -272,6 +272,22 @@ And here's the final result:
 
 ![](demo.gif)
 
+## Building
+
+`npm run dev` is all you need for local development — it runs the Vite dev server for the frontend and a `tsx`-powered, auto-reloading Express server for the backend.
+
+To produce a production build of the frontend (type-checks with `tsc`, then bundles into `app/dist`):
+
+```bash
+npm run build:app
+```
+
+There is no separate build step for the server; it is run directly from TypeScript via `tsx`.
+
+## Preparing the dataset
+
+The images under `data/` are already flattened and ready to index. `flatten.sh` is a one-off helper for flattening a nested `train/` directory into a single level (renaming files to `<subdir>-<filename>`) if you supply your own hierarchical image dataset. It is not part of the normal run/build flow.
+
 ## Testing
 
 The project uses [Vitest](https://vitest.dev/). Tests are organized in layers so that dependency bumps (e.g. Dependabot PRs) are caught before they silently break the example.

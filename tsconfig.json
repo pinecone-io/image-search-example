@@ -11,7 +11,6 @@
     "module": "nodenext",
     "sourceMap": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": "./src",
     "declaration": true,
     "experimentalDecorators": true,
     "noImplicitReturns": true,
@@ -23,11 +22,5 @@
     "noEmit": true
   },
   "exclude": ["node_modules/", "dist/", "tests/", "app/"],
-  "include": [
-    "./server",
-    "app",
-    "postcss.config.js",
-    "tailwind.config.js",
-    "app/vite.config.ts"
-  ]
+  "include": ["./server"]
 }
