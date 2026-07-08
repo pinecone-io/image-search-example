@@ -29,7 +29,9 @@ PINECONE_REGION="us-east-1"
 
 `PINECONE_INDEX` is the name of the index where this demo will store and query embeddings. You can change `PINECONE_INDEX` to any name you like, but make sure the name not going to collide with any indexes you are already using.
 
-`PINECONE_CLOUD` and `PINECONE_REGION` define where the index should be deployed. Currently, this is the only available cloud and region combination (`aws` and `us-west-2`), so it's recommended to leave them defaulted.
+`PINECONE_CLOUD` and `PINECONE_REGION` define where the serverless index is deployed. Both are optional — if you leave them out of your `.env`, the app defaults to `aws` and `us-east-1`.
+
+If you're on Pinecone's free (Starter) plan, `aws`/`us-east-1` is the only cloud and region you can create an index in, so the defaults work out of the box with no changes. Setting them to any other region will cause index creation to fail with an error asking you to upgrade your plan. Deploying elsewhere requires a paid plan.
 
 ## Dependencies
 
@@ -253,20 +255,20 @@ To delete an image, we call the `/deleteImage` endpoint with the image path. We 
 
 ## Running the application
 
-In order to run the aaplication:
+In order to run the application:
 
-1. If you havn't already, clone this repository. 
+1. If you haven't already, clone this repository. 
 2. Then run:
 
 ```bash
 npm run dev
 ```
 
-You should recieve a message: "Server started at http://localhost:3000". Copy this url into your web browser.
+You should receive a message: "Server started at http://localhost:3000". Copy this url into your web browser.
 
-3. Click the green "Index" button in the top left of the screen. Wait for the app to finish loading. 
+3. Click the green "Index" button in the top left of the screen. This embeds the sample images and upserts them into Pinecone, so it can take a moment — watch the terminal running `npm run dev`, where you'll see the index being created and vectors being upserted. Wait for the app to finish loading before continuing. 
 4. Select an image. 
-5. You will now be shown all similar image found within the dataset. 
+5. You will now be shown all similar images found within the dataset. 
 
 And here's the final result:
 
