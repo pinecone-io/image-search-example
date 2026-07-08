@@ -27,7 +27,10 @@ const getPineconeId = async (imagePath: string) => {
 
 const deleteImage = async (imagePath: string) => {
   const pineconeId = await getPineconeId(imagePath);
-  await getIndex().namespace("default").deleteOne(pineconeId);
+  if (!pineconeId) {
+    throw new Error(`No indexed vector found for image: ${imagePath}`);
+  }
+  await getIndex().namespace("default").deleteOne({ id: pineconeId });
   // Append _deleted to the image path for demo purposes
   await fs.rename(imagePath, `${imagePath}_deleted`);
 };

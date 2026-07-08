@@ -19,7 +19,7 @@ export const chunkedUpsert = async (
     await Promise.allSettled(
       chunks.map(async (chunk) => {
         try {
-          await index.namespace(namespace).upsert(chunk);
+          await index.namespace(namespace).upsert({ records: chunk });
         } catch (e) {
           console.log("Error upserting chunk", e);
         }

@@ -104,7 +104,7 @@ describe("deleteImage", () => {
       })
     );
     // ...deletes that vector...
-    expect(deleteOneMock).toHaveBeenCalledWith("vec-123");
+    expect(deleteOneMock).toHaveBeenCalledWith({ id: "vec-123" });
     // ...and marks the file deleted on disk.
     expect(fs.rename).toHaveBeenCalledWith("data/a.jpg", "data/a.jpg_deleted");
   });

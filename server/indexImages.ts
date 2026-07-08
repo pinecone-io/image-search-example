@@ -1,10 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable dot-notation */
 import * as dotenv from "dotenv";
-import {
-  Pinecone,
-  type ServerlessSpecCloudEnum,
-} from "@pinecone-database/pinecone";
+import { Pinecone } from "@pinecone-database/pinecone";
 import { embedder } from "./embeddings.ts";
 import { getEnv, listFiles } from "./utils/util.ts";
 import { embedAndUpsert } from "./utils/embedAndUpsert.js";
@@ -14,7 +11,7 @@ dotenv.config();
 // Index setup
 const indexImages = async () => {
   const indexName = getEnv("PINECONE_INDEX");
-  const indexCloud = getEnv("PINECONE_CLOUD") as ServerlessSpecCloudEnum;
+  const indexCloud = getEnv("PINECONE_CLOUD");
   const indexRegion = getEnv("PINECONE_REGION");
   const pinecone = new Pinecone();
 

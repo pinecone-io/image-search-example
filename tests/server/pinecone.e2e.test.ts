@@ -1,10 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import path from "path";
 import { fileURLToPath } from "url";
-import {
-  Pinecone,
-  type ServerlessSpecCloudEnum,
-} from "@pinecone-database/pinecone";
+import { Pinecone } from "@pinecone-database/pinecone";
 
 import { embedder } from "../../server/embeddings.ts";
 
@@ -28,7 +25,7 @@ const fixture = (name: string) =>
   path.join(__dirname, "..", "fixtures", "images", name);
 
 const NAMESPACE = "default";
-const CLOUD = (process.env.PINECONE_CLOUD || "aws") as ServerlessSpecCloudEnum;
+const CLOUD = process.env.PINECONE_CLOUD || "aws";
 const REGION = process.env.PINECONE_REGION || "us-east-1";
 
 // Unique, valid index name (lowercase alphanumeric + hyphens, <= 45 chars).
@@ -81,7 +78,7 @@ describe.skipIf(!HAS_KEY)("Pinecone live end-to-end", () => {
     const records = await Promise.all(
       fixtures.map((f) => embedder.embed(f, { imagePath: f }))
     );
-    await index.namespace(NAMESPACE).upsert(records);
+    await index.namespace(NAMESPACE).upsert({ records });
 
     // Wait until all upserted vectors are visible.
     await waitFor(
@@ -108,6 +105,10 @@ describe.skipIf(!HAS_KEY)("Pinecone live end-to-end", () => {
     const target = fixtures[0];
     const query = await embedder.embed(target);
 
+    // Serverless indexes are eventually consistent: recordCount in
+    // describeIndexStats can tick up before every vector is queryable. Poll
+    // until the query image's own vector is the top match, rather than until
+    // *any* match exists, so a freshness lag doesn't surface a different image.
     const result = await waitFor(
       () =>
         index.namespace(NAMESPACE).query({
@@ -115,7 +116,7 @@ describe.skipIf(!HAS_KEY)("Pinecone live end-to-end", () => {
           topK: 3,
           includeMetadata: true,
         }),
-      (r) => (r.matches?.length ?? 0) > 0
+      (r) => r.matches?.[0]?.id === query.id
     );
 
     expect(result.matches && result.matches.length).toBeGreaterThan(0);
@@ -130,7 +131,7 @@ describe.skipIf(!HAS_KEY)("Pinecone live end-to-end", () => {
     const target = fixtures[1];
     const { id } = await embedder.embed(target);
 
-    await index.namespace(NAMESPACE).deleteOne(id);
+    await index.namespace(NAMESPACE).deleteOne({ id });
 
     const stats = await waitFor(
       () => index.namespace(NAMESPACE).describeIndexStats(),
