@@ -10,20 +10,13 @@ const sliceIntoChunks = <T>(arr: T[], chunkSize: number) =>
   );
 
 // Every image the app serves, searches, or deletes lives under this directory.
-// Handlers take a client-supplied image path, so that path must be confined
-// here before any filesystem access — otherwise a value like "../../etc/passwd"
-// could read or rename files anywhere the server process can reach.
-const DATA_DIR = path.resolve("data");
-
-// Resolves a client-supplied image path and verifies it stays inside DATA_DIR,
-// throwing otherwise. Returns the absolute, normalized path safe to pass to fs.
-export const resolveWithinDataDir = (imagePath: string): string => {
-  const resolved = path.resolve(imagePath);
-  if (resolved !== DATA_DIR && !resolved.startsWith(DATA_DIR + path.sep)) {
-    throw new Error(`Invalid image path: ${imagePath}`);
-  }
-  return resolved;
-};
+// Handlers receive a client-supplied image path and must confine it here before
+// any filesystem access — otherwise a value like "../../etc/passwd" could read
+// or rename files anywhere the server process can reach. The confinement guard
+// is written inline at each fs sink (see query.ts / deleteImage.ts) rather than
+// wrapped in a helper: CodeQL only treats the check as a sanitizer when it lives
+// in the same function as the sink it guards.
+export const DATA_DIR = path.resolve("data");
 
 async function listFiles(dir: string): Promise<string[]> {
   const files = await fs.readdir(dir);

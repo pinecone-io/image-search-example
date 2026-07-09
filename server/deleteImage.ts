@@ -1,7 +1,8 @@
 import { Pinecone, type Index } from "@pinecone-database/pinecone";
 import fs from "fs/promises";
+import path from "path";
 import { embedder } from "./embeddings.ts";
-import { getEnv, resolveWithinDataDir } from "./utils/util.ts";
+import { getEnv, DATA_DIR } from "./utils/util.ts";
 import { type Metadata } from "./query.js";
 
 let index: Index<Metadata>;
@@ -26,8 +27,13 @@ const getPineconeId = async (imagePath: string) => {
 };
 
 const deleteImage = async (imagePath: string) => {
-  // Confine the client-supplied path to the data directory before any fs use.
-  const safePath = resolveWithinDataDir(imagePath);
+  // Confine the client-supplied path to the data directory before touching the
+  // filesystem: path.resolve collapses any "..", and the prefix check rejects
+  // anything that escapes DATA_DIR.
+  const safePath = path.resolve(imagePath);
+  if (safePath !== DATA_DIR && !safePath.startsWith(DATA_DIR + path.sep)) {
+    throw new Error(`Invalid image path: ${imagePath}`);
+  }
   const pineconeId = await getPineconeId(imagePath);
   if (!pineconeId) {
     throw new Error(`No indexed vector found for image: ${imagePath}`);
