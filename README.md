@@ -37,8 +37,8 @@ If you're on Pinecone's free (Starter) plan, `aws`/`us-east-1` is the only cloud
 
 You can see the full list of dependencies in the `package.json` file, but the main ones are:
 
-1. [Pinecone](https://www.npmjs.com/package/@pinecone-database/pineconetran) - the Pinecone SDK for Node.js
-2. [Transformer.js](https://www.npmjs.com/package/@xenova/transformers) - a library for embedding images using a pre-trained model
+1. [Pinecone](https://www.npmjs.com/package/@pinecone-database/pinecone) - the Pinecone SDK for Node.js
+2. [Transformers.js](https://www.npmjs.com/package/@huggingface/transformers) - a library for embedding images using a pre-trained model
 3. [Express.js](https://www.npmjs.com/package/express) - a web framework for Node.js used to build the API
 4. [React.js](https://www.npmjs.com/package/react) - a JavaScript library for building the user interface
 
@@ -58,28 +58,36 @@ This allows for sophisticated image search capabilities; you can find images bas
 
 Let's start by taking a look at the top level `indexImages` function. The function will:
 
-1. Create an index in Pinecone if it doesn't already exist, and wait until it's ready to be used. The CLIP model we'll be using for embedding the images has an embedding size of 512, so we'll use that as the dimension of the index.
+1. Create a serverless index in Pinecone if it doesn't already exist, and wait until it's ready to be used. The CLIP model we'll be using for embedding the images has an embedding size of 512, so we'll use that as the dimension of the index. The `cloud` and `region` come from the environment (defaulting to `aws`/`us-east-1`, as described above).
 2. Initialize the image embedding model
 3. Retrieve the list of all the images in the `data` folder
 4. embed the images and upsert them into the index
 
 ```ts
 const indexImages = async () => {
+  const indexName = getEnv("PINECONE_INDEX");
+  const indexCloud = getEnv("PINECONE_CLOUD", DEFAULT_PINECONE_CLOUD);
+  const indexRegion = getEnv("PINECONE_REGION", DEFAULT_PINECONE_REGION);
+  const pinecone = new Pinecone();
+
   try {
     // Create the index if it doesn't already exist
     const indexList = await pinecone.listIndexes();
-    if (indexList.indexOf({ name: indexName }) === -1) {
+    if (!indexList.indexes?.some((index) => index.name === indexName)) {
       await pinecone.createIndex({
         name: indexName,
         dimension: 512,
+        spec: { serverless: { region: indexRegion, cloud: indexCloud } },
         waitUntilReady: true,
       });
     }
 
-    await embedder.init("Xenova/clip-vit-base-patch32");
+    // Get the index
+    const index = pinecone.index(indexName);
+
+    await embedder.ready();
     const imagePaths = await listFiles("./data");
-    await embedAndUpsert({ imagePaths, chunkSize: 100 });
-    return;
+    await embedAndUpsert({ imagePaths, chunkSize: 100, index });
   } catch (error) {
     console.error(error);
     throw error;
@@ -87,7 +95,7 @@ const indexImages = async () => {
 };
 ```
 
-Now let's break the embedding process up a bit. The `Embedder` class is initialized using the `AutoModel`, `AutoTokenizer` and `AutoProcessor` which automatically defines the model, tokenizer and processor based on the model name. The `embed` function takes an image path and returns the embedding. The `embedBatch` function takes a batch of image paths and calls the `onDoneBatch` callback with the embeddings. For the ID of the embedding, we use the MD5 hash of the image path.
+Now let's break the embedding process up a bit. The `Embedder` class is initialized using the `AutoModel`, `AutoTokenizer` and `AutoProcessor` which automatically defines the model, tokenizer and processor based on the model name. Rather than calling `init` directly, callers use `ready()`, which loads the model at most once and hands every subsequent caller the same in-flight promise — so the ~600MB CLIP weights are never loaded twice even though several entry points (`indexImages`, `queryImages`, `deleteImage`) all need the embedder. The `embed` function takes an image path and returns the embedding. The `embedBatch` function takes a batch of image paths and calls the `onDoneBatch` callback with the embeddings. For the ID of the embedding, we use the MD5 hash of the image path.
 
 In this example, we're not going to use any text inputs, so we just pass an empty string as the input to the tokenizer.
 
@@ -99,6 +107,10 @@ class Embedder {
 
   private tokenizer: PreTrainedTokenizer;
 
+  // Caches the in-flight/completed init so the model is only loaded once,
+  // no matter how many entry points call ready().
+  private initPromise: Promise<void> | null = null;
+
   async init(modelName: string) {
     // Load the model, tokenizer and processor
     this.model = await AutoModel.from_pretrained(modelName);
@@ -106,12 +118,23 @@ class Embedder {
     this.processor = await AutoProcessor.from_pretrained(modelName);
   }
 
+  // Idempotent, lazy initialization. Safe to call from every entry point:
+  // the model is loaded at most once and subsequent calls await the same promise.
+  async ready(modelName: string = DEFAULT_MODEL): Promise<void> {
+    if (!this.initPromise) {
+      this.initPromise = this.init(modelName);
+    }
+    return this.initPromise;
+  }
+
   // Embeds an image and returns the embedding
   async embed(
     imagePath: string,
     metadata?: RecordMetadata
-  ): Promise<PineconeRecord> {
+  ): Promise<DenseRecord> {
     try {
+      // Ensure the model is loaded before embedding.
+      await this.ready();
       // Load the image
       const image = await RawImage.read(imagePath);
       // Prepare the image and text inputs
@@ -148,6 +171,7 @@ class Embedder {
     batchSize: number,
     onDoneBatch: (embeddings: PineconeRecord[]) => void
   ) {
+    await this.ready();
     const batches = sliceIntoChunks<string>(imagePaths, batchSize);
     for (const batch of batches) {
       const embeddings = await Promise.all(
@@ -159,21 +183,20 @@ class Embedder {
 }
 ```
 
-The `embedAndUpsert` function takes a list of image paths and a chunk size, and proceeds to embed and upsert these images in chunks:
+The `embedAndUpsert` function takes a list of image paths, a chunk size, and the target index, then proceeds to embed and upsert these images in chunks. It's shared by both `indexImages` (the initial bulk index) and `upsertImages` (uploads), so the caller passes in the index it already holds:
 
 ```ts
 async function embedAndUpsert({
   imagePaths,
   chunkSize,
+  index,
 }: {
   imagePaths: string[];
   chunkSize: number;
+  index: Index;
 }) {
   // Chunk the image paths into batches of size chunkSize
   const chunkGenerator = chunkArray(imagePaths, chunkSize);
-
-  // Get the index
-  const index = pinecone.index(indexName);
 
   // Embed each batch and upsert the embeddings into the index
   for await (const imagePaths of chunkGenerator) {
@@ -188,40 +211,52 @@ async function embedAndUpsert({
 }
 ```
 
-We expose the `indexImages` function in the `index.ts` file, which is called when the server starts, under the `/indexImages` route. We'll call it later on from our UI.
+We expose the `indexImages` function through the `/indexImages` route (registered in `server/routes.ts`). It isn't run at server start — it fires when you click the "Index" button in the UI, which we'll wire up later on.
 
 ## Querying the index
 
 In order to easily present the results of our image query, we created a simple UI using React. The UI will present a set of images and allow us to select one of them. The query will then return the most similar images to the selected image.
 
-Once an image is selected, it's path will be sent to the `/search` endpoint, which will query the index and return the results. The `query` function will:
+Once an image is selected, it's path will be sent to the `/search` endpoint, which will query the index and return the results. The `queryImages` function will:
 
-1. Initialize the embedder with the same model used for indexing
-2. Embed the selected image
+1. Confine the client-supplied `imagePath` to the `data` directory before touching the filesystem — the path arrives from an HTTP request, so we guard against `../` traversal before reading it
+2. Embed the selected image (the embedder lazily loads the CLIP model on first use)
 3. Use the embedding to query the index
 4. Return the matching images and their respective scores
 
+Note that we pass a metadata type parameter to `pinecone.index<Metadata>(...)`, which gives us type-checked access to `match.metadata.imagePath` in the results.
+
 ```ts
-type Metadata = {
+export type Metadata = {
   imagePath: string;
 };
 
-const indexName = getEnv("PINECONE_INDEX");
-const pinecone = new Pinecone();
-const index = pinecone.index<Metadata>(indexName);
-
-await embedder.init("Xenova/clip-vit-base-patch32");
+let index: Index<Metadata>;
+const getIndex = (): Index<Metadata> => {
+  if (!index) {
+    const pinecone = new Pinecone();
+    index = pinecone.index<Metadata>(getEnv("PINECONE_INDEX"));
+  }
+  return index;
+};
 
 const queryImages = async (imagePath: string) => {
-  const queryEmbedding = await embedder.embed(imagePath);
-  const queryResult = await index.namespace("default").query({
+  // Confine the client-supplied path to the data directory before reading it:
+  // path.resolve collapses any "..", and a path.relative that starts with ".."
+  // means the resolved path escaped DATA_DIR.
+  const safePath = path.resolve(imagePath);
+  if (path.relative(DATA_DIR, safePath).startsWith("..")) {
+    throw new Error(`Invalid image path: ${imagePath}`);
+  }
+  const queryEmbedding = await embedder.embed(safePath);
+  const queryResult = await getIndex().namespace("default").query({
     vector: queryEmbedding.values,
     includeMetadata: true,
     includeValues: true,
     topK: 6,
   });
   return queryResult.matches?.map((match) => {
-    const metadata = match.metadata;
+    const { metadata } = match;
     return {
       src: metadata ? metadata.imagePath : "",
       score: match.score,
@@ -232,7 +267,7 @@ const queryImages = async (imagePath: string) => {
 
 ## The application
 
-The application is a simple React app that allows us to select an image and query the index for similar images. The app is served by the Express server, which also exposes the `/search`, `/indexImages`, `/upsertImages`, and `/deleteImage` endpoints.
+The application is a simple React app that allows us to select an image and query the index for similar images. The app is served by the Express server, which also exposes the `/getImages`, `/search`, `/indexImages`, `/uploadImages`, and `/deleteImage` endpoints.
 
 The front end paginates the query results and displays them in a grid. The main `App` component renders the UI and calls the `/search` endpoint when an image is selected.
 
