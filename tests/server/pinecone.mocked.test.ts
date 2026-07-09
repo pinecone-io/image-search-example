@@ -34,6 +34,7 @@ vi.mock("fs/promises", () => ({ default: { rename: vi.fn() } }));
 import { queryImages } from "../../server/query.ts";
 import { deleteImage } from "../../server/deleteImage.ts";
 import fs from "fs/promises";
+import path from "path";
 
 beforeAll(() => {
   process.env.PINECONE_INDEX = "test-index";
@@ -50,7 +51,8 @@ describe("queryImages", () => {
 
     await queryImages("data/query.jpg");
 
-    expect(embedMock).toHaveBeenCalledWith("data/query.jpg");
+    // Embedded via a path confined to the data dir (resolved to absolute).
+    expect(embedMock).toHaveBeenCalledWith(path.resolve("data/query.jpg"));
     expect(namespaceMock).toHaveBeenCalledWith("default");
     expect(queryMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -87,6 +89,14 @@ describe("queryImages", () => {
     const result = await queryImages("data/query.jpg");
     expect(result).toEqual([{ src: "", score: 0.5 }]);
   });
+
+  it("rejects a path that escapes the data directory without embedding", async () => {
+    await expect(queryImages("../../etc/passwd")).rejects.toThrow(
+      /invalid image path/i
+    );
+    expect(embedMock).not.toHaveBeenCalled();
+    expect(queryMock).not.toHaveBeenCalled();
+  });
 });
 
 describe("deleteImage", () => {
@@ -105,7 +115,17 @@ describe("deleteImage", () => {
     );
     // ...deletes that vector...
     expect(deleteOneMock).toHaveBeenCalledWith({ id: "vec-123" });
-    // ...and marks the file deleted on disk.
-    expect(fs.rename).toHaveBeenCalledWith("data/a.jpg", "data/a.jpg_deleted");
+    // ...and marks the file deleted on disk, using a path confined to the data
+    // directory (resolved to absolute to guard against path traversal).
+    const expected = path.resolve("data/a.jpg");
+    expect(fs.rename).toHaveBeenCalledWith(expected, `${expected}_deleted`);
+  });
+
+  it("rejects a path that escapes the data directory without touching disk", async () => {
+    await expect(deleteImage("../../etc/passwd")).rejects.toThrow(
+      /invalid image path/i
+    );
+    expect(fs.rename).not.toHaveBeenCalled();
+    expect(deleteOneMock).not.toHaveBeenCalled();
   });
 });

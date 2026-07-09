@@ -6,6 +6,12 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Both jobs only check out the repo and run tests, so read-only access to the
+# repository contents is all the GITHUB_TOKEN needs. Setting it explicitly at
+# the top level narrows the token from its broad default for every job.
+permissions:
+  contents: read
+
 # Dependabot opens pull requests, so the `pull_request` trigger above runs the
 # `test` job against every dependency bump — which is the whole point: a bump
 # that breaks the CLIP embedding pipeline or the Pinecone/Express integration

@@ -1,7 +1,8 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { Pinecone, type Index } from '@pinecone-database/pinecone';
+import path from "path";
 import { embedder } from "./embeddings.ts";
-import { getEnv } from "./utils/util.ts";
+import { getEnv, DATA_DIR } from "./utils/util.ts";
 
 export type Metadata = {
   imagePath: string;
@@ -17,7 +18,14 @@ const getIndex = (): Index<Metadata> => {
 };
 
 const queryImages = async (imagePath: string) => {
-  const queryEmbedding = await embedder.embed(imagePath);
+  // Confine the client-supplied path to the data directory before reading it:
+  // path.resolve collapses any "..", and a path.relative that starts with ".."
+  // means the resolved path escaped DATA_DIR.
+  const safePath = path.resolve(imagePath);
+  if (path.relative(DATA_DIR, safePath).startsWith("..")) {
+    throw new Error(`Invalid image path: ${imagePath}`);
+  }
+  const queryEmbedding = await embedder.embed(safePath);
   const queryResult = await getIndex().namespace('default').query({
       vector: queryEmbedding.values,
       includeMetadata: true,
