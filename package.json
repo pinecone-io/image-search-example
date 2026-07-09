@@ -1,7 +1,7 @@
 {
   "name": "pinecone-image-search-example",
   "version": "1.0.0",
-  "description": "",
+  "description": "An example image search engine built with Pinecone and the CLIP model.",
   "type": "module",
   "scripts": {
     "dev:server": "nodemon --watch 'server/**/*.ts' --exec 'tsx' server/index.ts",
@@ -16,11 +16,11 @@
     "test:app": "vitest run --project app"
   },
   "keywords": [
-    "starter",
-    "template",
+    "pinecone",
+    "vector-search",
+    "clip",
     "node",
     "typescript",
-    "llm",
     "image search"
   ],
   "author": "Roie Schwaber-Cohen",
@@ -32,12 +32,10 @@
     "@huggingface/transformers": "^4.2.0",
     "@pinecone-database/pinecone": "^8.0.0",
     "@radix-ui/react-alert-dialog": "^1.0.5",
-    "console-table-printer": "^2.11.1",
-    "cross-fetch": "^3.1.6",
     "dotenv": "^16.1.3",
     "express": "^4.18.2",
     "express-rate-limit": "^8.5.2",
-    "http-proxy-middleware": "^3.0.0-beta.1",
+    "http-proxy-middleware": "^3.0.7",
     "multer": "^2.2.0",
     "nodemon": "^3.0.1",
     "onnxruntime-node": "^1.15.0",
