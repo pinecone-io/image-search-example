@@ -1,25 +1,8 @@
 import { Pinecone, type Index } from "@pinecone-database/pinecone";
 import fs from "fs/promises";
-import path from "path";
 import { embedder } from "./embeddings.ts";
-import { getEnv } from "./utils/util.ts";
+import { getEnv, resolveWithinDataDir } from "./utils/util.ts";
 import { type Metadata } from "./query.js";
-
-// Every deletable image lives under this directory. Deletion renames a file on
-// disk from a client-supplied path, so that path must be confined here —
-// otherwise a value like "../../etc/passwd" would let a caller rename files
-// anywhere the server process can write.
-const DATA_DIR = path.resolve("data");
-
-// Resolves a client-supplied image path and verifies it stays inside DATA_DIR,
-// throwing otherwise. Returns the absolute, normalized path safe to pass to fs.
-const resolveWithinDataDir = (imagePath: string): string => {
-  const resolved = path.resolve(imagePath);
-  if (resolved !== DATA_DIR && !resolved.startsWith(DATA_DIR + path.sep)) {
-    throw new Error(`Invalid image path: ${imagePath}`);
-  }
-  return resolved;
-};
 
 let index: Index<Metadata>;
 const getIndex = (): Index<Metadata> => {

@@ -51,7 +51,8 @@ describe("queryImages", () => {
 
     await queryImages("data/query.jpg");
 
-    expect(embedMock).toHaveBeenCalledWith("data/query.jpg");
+    // Embedded via a path confined to the data dir (resolved to absolute).
+    expect(embedMock).toHaveBeenCalledWith(path.resolve("data/query.jpg"));
     expect(namespaceMock).toHaveBeenCalledWith("default");
     expect(queryMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -87,6 +88,14 @@ describe("queryImages", () => {
 
     const result = await queryImages("data/query.jpg");
     expect(result).toEqual([{ src: "", score: 0.5 }]);
+  });
+
+  it("rejects a path that escapes the data directory without embedding", async () => {
+    await expect(queryImages("../../etc/passwd")).rejects.toThrow(
+      /invalid image path/i
+    );
+    expect(embedMock).not.toHaveBeenCalled();
+    expect(queryMock).not.toHaveBeenCalled();
   });
 });
 

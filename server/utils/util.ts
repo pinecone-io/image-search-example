@@ -9,6 +9,22 @@ const sliceIntoChunks = <T>(arr: T[], chunkSize: number) =>
     arr.slice(i * chunkSize, (i + 1) * chunkSize)
   );
 
+// Every image the app serves, searches, or deletes lives under this directory.
+// Handlers take a client-supplied image path, so that path must be confined
+// here before any filesystem access — otherwise a value like "../../etc/passwd"
+// could read or rename files anywhere the server process can reach.
+const DATA_DIR = path.resolve("data");
+
+// Resolves a client-supplied image path and verifies it stays inside DATA_DIR,
+// throwing otherwise. Returns the absolute, normalized path safe to pass to fs.
+export const resolveWithinDataDir = (imagePath: string): string => {
+  const resolved = path.resolve(imagePath);
+  if (resolved !== DATA_DIR && !resolved.startsWith(DATA_DIR + path.sep)) {
+    throw new Error(`Invalid image path: ${imagePath}`);
+  }
+  return resolved;
+};
+
 async function listFiles(dir: string): Promise<string[]> {
   const files = await fs.readdir(dir);
   const filePaths: string[] = [];
