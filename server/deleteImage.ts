@@ -28,10 +28,10 @@ const getPineconeId = async (imagePath: string) => {
 
 const deleteImage = async (imagePath: string) => {
   // Confine the client-supplied path to the data directory before touching the
-  // filesystem: path.resolve collapses any "..", and the prefix check rejects
-  // anything that escapes DATA_DIR.
+  // filesystem: path.resolve collapses any "..", and a path.relative that
+  // starts with ".." means the resolved path escaped DATA_DIR.
   const safePath = path.resolve(imagePath);
-  if (safePath !== DATA_DIR && !safePath.startsWith(DATA_DIR + path.sep)) {
+  if (path.relative(DATA_DIR, safePath).startsWith("..")) {
     throw new Error(`Invalid image path: ${imagePath}`);
   }
   const pineconeId = await getPineconeId(imagePath);
