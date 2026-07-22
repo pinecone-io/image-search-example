@@ -30,6 +30,17 @@ vi.mock("../../server/embeddings.ts", () => ({
   DEFAULT_MODEL: "test-model",
 }));
 vi.mock("fs/promises", () => ({ default: { rename: vi.fn() } }));
+// getEnv("PINECONE_API_KEY") only feeds the (mocked) Pinecone constructor
+// above, so its real value never matters here — stub it so the suite doesn't
+// need a real key just to satisfy the SDK's required `apiKey` config field.
+vi.mock("../../server/utils/util.ts", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../server/utils/util.ts")>();
+  return {
+    ...actual,
+    getEnv: (key: string, defaultValue?: string) =>
+      key === "PINECONE_API_KEY" ? "test-api-key" : actual.getEnv(key, defaultValue),
+  };
+});
 
 import { queryImages } from "../../server/query.ts";
 import { deleteImage } from "../../server/deleteImage.ts";
