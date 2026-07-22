@@ -61,7 +61,10 @@ describe.skipIf(!HAS_KEY)("Pinecone live end-to-end", () => {
   );
 
   beforeAll(async () => {
-    pinecone = new Pinecone();
+    pinecone = new Pinecone({
+      apiKey: process.env.PINECONE_API_KEY as string,
+      sourceTag: "pinecone:image_search_example",
+    });
     await embedder.ready();
 
     const existing = await pinecone.listIndexes();

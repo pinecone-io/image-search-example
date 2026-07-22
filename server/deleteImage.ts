@@ -8,7 +8,10 @@ import { type Metadata } from "./query.js";
 let index: Index<Metadata>;
 const getIndex = (): Index<Metadata> => {
   if (!index) {
-    const pinecone = new Pinecone();
+    const pinecone = new Pinecone({
+      apiKey: getEnv("PINECONE_API_KEY"),
+      sourceTag: "pinecone:image_search_example",
+    });
     index = pinecone.index<Metadata>(getEnv("PINECONE_INDEX"));
   }
   return index;

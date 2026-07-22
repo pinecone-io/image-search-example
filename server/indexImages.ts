@@ -18,7 +18,10 @@ const indexImages = async () => {
   const indexName = getEnv("PINECONE_INDEX");
   const indexCloud = getEnv("PINECONE_CLOUD", DEFAULT_PINECONE_CLOUD);
   const indexRegion = getEnv("PINECONE_REGION", DEFAULT_PINECONE_REGION);
-  const pinecone = new Pinecone();
+  const pinecone = new Pinecone({
+    apiKey: getEnv("PINECONE_API_KEY"),
+    sourceTag: "pinecone:image_search_example",
+  });
 
   try {
     // Create the index if it doesn't already exist
