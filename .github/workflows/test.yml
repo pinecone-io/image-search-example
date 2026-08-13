@@ -51,6 +51,9 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Dependency audit (fail on high or critical)
+        run: npm audit --audit-level=high
+
       # Real Vite production build of the frontend. Catches bundling/plugin
       # breaks (e.g. a Vite major bump) that `tsc --noEmit` alone won't surface.
       - name: Build frontend
