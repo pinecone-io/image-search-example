@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",
-    "@pinecone-database/pinecone": "^8.0.0",
+    "@pinecone-database/pinecone": "^8.2.0",
     "@radix-ui/react-alert-dialog": "^1.0.5",
     "dotenv": "^16.1.3",
     "express": "^4.18.2",
